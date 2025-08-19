@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { verifySession } from './lib/session'
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+
+  // Skip middleware for public routes
+  if (
+    pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/client') ||
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname === '/'
+  ) {
+    return NextResponse.next()
+  }
+
+  // Check for session cookie
+  const token = request.cookies.get('session')?.value
+
+  if (!token) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+
+  // Verify session
+  const session = await verifySession(token)
+
+  if (!session) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+
+  // Check admin routes
+  if (pathname.startsWith('/admin') && session.pmUser.role !== 'admin') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  return NextResponse.next()
+}
+
+export const config = {
+  matcher: [
+    '/((?!api/auth|auth|client|_next/static|_next/image|favicon.ico).*)',
+  ],
+}
