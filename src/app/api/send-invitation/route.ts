@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import nodemailer from 'nodemailer'
 
@@ -69,21 +70,43 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and full name are required' }, { status: 400 })
     }
 
-    // Generate invitation link using Supabase admin
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
-      type: 'invite',
-      email: email,
-      options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/signup`
-      }
-    })
+    // Create admin client for generating invitation links (NO cookies, NO SSR)
+    console.log(
+      'hash in route',
+      require('crypto')
+        .createHash('sha256')
+        .update(process.env.SUPABASE_SERVICE_ROLE_KEY!)
+        .digest('hex')
+        .slice(0, 8)
+    );
+    
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,      // ✅ your project URL
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,     // ✅ 219-char service key
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    )
 
-    if (linkError) {
-      console.error('Link generation error:', linkError)
-      return NextResponse.json({ error: 'Failed to generate invitation link' }, { status: 500 })
+    // Create user in invited state (bypasses generateLink issues)
+    const tempPassword = require('crypto').randomBytes(16).toString('base64url');
+    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+      email: email,
+      password: tempPassword,
+      email_confirm: false, // User will confirm during signup
+      user_metadata: {
+        full_name: fullName,
+        company: company || 'InfoWorks',
+        invited: true
+      }
+    });
+
+    console.log('User creation result:', userData?.user?.id || 'failed', userError?.message || 'success')
+
+    if (userError) {
+      return NextResponse.json({ error: `User creation failed: ${userError.message}` }, { status: 500 })
     }
 
-    const signupUrl = linkData.properties.action_link
+    // Create our own invitation link
+    const signupUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/signup?email=${encodeURIComponent(email)}&invited=true`
 
     // Create Gmail transporter
     const transporter = nodemailer.createTransport({
