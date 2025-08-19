@@ -1,0 +1,172 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// NextAuth.js models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  accounts      Account[]
+  sessions      Session[]
+  pmUser        PmUser?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Project Pulse models
+model PmUser {
+  id           String    @id
+  email        String    @unique
+  full_name    String
+  company      String?   @default("InfoWorks")
+  role         String    @default("pm")
+  invite_status String   @default("accepted")
+  last_login   DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  user         User      @relation(fields: [id], references: [id], onDelete: Cascade)
+  projects     Project[]
+
+  @@map("pm_users")
+}
+
+model PmInvitation {
+  id            Int      @id @default(autoincrement())
+  email         String
+  full_name     String
+  company       String?  @default("InfoWorks")
+  role          String   @default("pm")
+  invite_status String   @default("pending")
+  created_at    DateTime @default(now())
+
+  @@map("pm_invitations")
+}
+
+model Project {
+  id               String   @id @default(cuid())
+  name             String
+  client_name      String
+  start_date       DateTime
+  end_date         DateTime?
+  pm_user_id       String
+  overall_status   String   @default("on-track")
+  overall_summary  String?
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  pmUser           PmUser   @relation(fields: [pm_user_id], references: [id])
+  pulse_updates    PulseUpdate[]
+  roadmap_tasks    RoadmapTask[]
+  client_users     ClientUser[]
+  client_tokens    ClientAccessToken[]
+
+  @@map("projects")
+}
+
+model PulseUpdate {
+  id              String   @id @default(cuid())
+  project_id      String
+  week_ending     DateTime
+  overall_status  String
+  executive_summary String?
+  deliverables_summary String?
+  timeline_summary String?
+  roadmap_summary String?
+  next_week_focus String?
+  blockers        String?
+  budget_notes    String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  project         Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@map("pulse_updates")
+}
+
+model RoadmapTask {
+  id              String   @id @default(cuid())
+  project_id      String
+  task_name       String
+  task_description String?
+  week_number     Int
+  year            Int
+  status          String   @default("not-started")
+  is_milestone    Boolean  @default(false)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  project         Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@map("roadmap_tasks")
+}
+
+model ClientUser {
+  id              String   @id @default(cuid())
+  project_id      String
+  name            String
+  email           String
+  role            String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  project         Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@map("client_users")
+}
+
+model ClientAccessToken {
+  id              String   @id @default(cuid())
+  project_id      String
+  token           String   @unique
+  client_name     String
+  created_at      DateTime @default(now())
+  expires_at      DateTime?
+  last_accessed   DateTime?
+
+  project         Project  @relation(fields: [project_id], references: [id], onDelete: Cascade)
+
+  @@map("client_access_tokens")
+}
