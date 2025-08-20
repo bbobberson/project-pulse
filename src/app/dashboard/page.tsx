@@ -29,6 +29,13 @@ export default function Dashboard() {
   const [pendingInvitations, setPendingInvitations] = useState<any[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [inviteFormData, setInviteFormData] = useState({
+    email: '',
+    fullName: '',
+    company: 'InfoWorks'
+  })
+  const [inviteLoading, setInviteLoading] = useState(false)
 
   useEffect(() => {
     async function fetchProjects() {
@@ -82,6 +89,38 @@ export default function Dashboard() {
     fetchProjects()
   }, [])
 
+  const handleInviteSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setInviteLoading(true)
+
+    try {
+      const response = await fetch('/api/send-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(inviteFormData),
+      })
+
+      if (response.ok) {
+        alert('Invitation sent successfully!')
+        setShowInviteModal(false)
+        setInviteFormData({
+          email: '',
+          fullName: '',
+          company: 'InfoWorks'
+        })
+      } else {
+        const { error } = await response.json()
+        alert(`Error: ${error}`)
+      }
+    } catch (error) {
+      alert('Network error. Please try again.')
+    } finally {
+      setInviteLoading(false)
+    }
+  }
+
   // Filter projects based on search query and status
   const filteredProjects = projects.filter(project => {
     const matchesSearch = searchQuery === '' || 
@@ -131,10 +170,10 @@ export default function Dashboard() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => router.push('/admin')}
+                  onClick={() => setShowInviteModal(true)}
                   className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
                 >
-                  Admin Panel
+                  Invite PM
                 </motion.button>
               )}
               <motion.button
@@ -394,6 +433,76 @@ export default function Dashboard() {
           )}
         </motion.div>
       </div>
+
+      {/* Invite PM Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 w-full max-w-md">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Invite PM</h2>
+            
+            <form onSubmit={handleInviteSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={inviteFormData.email}
+                  onChange={(e) => setInviteFormData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="pm@company.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={inviteFormData.fullName}
+                  onChange={(e) => setInviteFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="John Doe"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company
+                </label>
+                <input
+                  type="text"
+                  value={inviteFormData.company}
+                  onChange={(e) => setInviteFormData(prev => ({ ...prev, company: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="InfoWorks"
+                />
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={inviteLoading}
+                  style={{ backgroundColor: '#1C2B45' }}
+                  className="flex-1 px-4 py-2 text-white rounded-lg hover:opacity-90 disabled:opacity-50"
+                >
+                  {inviteLoading ? 'Sending...' : 'Send Invite'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
     console.log('User creation result:', userData?.user?.id || 'failed', userError?.message || 'success')
 
     if (userError) {
+      console.error('createUser failed:', JSON.stringify(userError, null, 2))
       return NextResponse.json({ error: `User creation failed: ${userError.message}` }, { status: 500 })
     }
 
