@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  webpack: (config, { dev }) => {
+    if (dev) config.cache = false;      // disable persistent FS cache in dev
+    return config;
+  },
 };
 
 export default nextConfig;

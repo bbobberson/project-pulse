@@ -5,33 +5,11 @@ import { cookies } from 'next/headers'
 
 export async function POST(request: NextRequest) {
   try {
-    // Create Supabase client with cookies for server-side auth
-    const cookieStore = await cookies()
-    const supabaseAuth = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options)
-              })
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          }
-        }
-      }
-    )
-
+    // Create Supabase client with cookies for server-side auth  
+    const supabaseClient = supabase()
+    
     // Verify PM authentication
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -43,7 +21,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify PM has access to this project
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await supabaseClient
       .from('projects')
       .select('id, name, client_name')
       .eq('id', projectId)
@@ -95,32 +73,10 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     // Create Supabase client with cookies for server-side auth
-    const cookieStore = await cookies()
-    const supabaseAuth = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll()
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options)
-              })
-            } catch {
-              // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
-            }
-          }
-        }
-      }
-    )
+    const supabaseClient = supabase()
 
     // Verify PM authentication
-    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -133,7 +89,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verify PM has access to this project and get tokens
-    const { data: tokens, error } = await supabase
+    const { data: tokens, error } = await supabaseClient
       .from('client_access_tokens')
       .select(`
         id,

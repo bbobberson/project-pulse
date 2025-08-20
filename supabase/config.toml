@@ -1,0 +1,31 @@
+project_id = "wryhewzgpfzfkarxiwrc"
+
+####################
+# AUTH – CORE URLs #
+####################
+[auth]
+site_url               = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000"]
+
+########################
+# AUTH – MFA SETTINGS  #
+########################
+[auth.mfa]
+max_enrolled_factors = 10
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+########################################
+# AUTH – PER-ADDRESS EMAIL GUARD RAILS #
+########################################
+[auth.email]
+# Minimum interval between OTP-style emails
+max_frequency = "1m"     # “1m”, “1h”, etc.
+otp_length    = 6
+otp_expiry    = 3600      # seconds
+
+########################################
+# AUTH – GLOBAL PER-IP RATE LIMITS     #
+###################
