@@ -45,7 +45,7 @@ export default function Login() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h1 className="text-4xl font-bold text-center text-gray-900 mb-2">Project Pulse</h1>
-          <h2 className="text-xl text-center text-gray-600 mb-8">PM Login</h2>
+          <h2 className="text-xl text-center text-gray-600 mb-8">Sign In</h2>
         </div>
         
         <div className="bg-white p-8 rounded-lg shadow-sm border border-gray-200">
@@ -109,14 +109,6 @@ export default function Login() {
               </button>
             </p>
             
-            <div className="mt-4">
-              <button
-                onClick={() => router.push('/')}
-                className="text-sm text-gray-500 hover:text-gray-700"
-              >
-                ← Back to Home
-              </button>
-            </div>
           </div>
         </div>
       </div>
