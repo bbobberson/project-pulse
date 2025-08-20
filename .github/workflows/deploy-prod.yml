@@ -1,0 +1,29 @@
+name: Ship tagged releases to Vercel (prod)
+
+on:
+  push:
+    tags: ['v*']          # deploys only version tags like v0.4-mvp
+
+jobs:
+  prod:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with: { version: 8 }
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - uses: amondnet/vercel-action@v25
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-token:  ${{ secrets.VERCEL_TOKEN }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-org-id:    ${{ secrets.VERCEL_ORG_ID }}
+          vercel-args: '--prod --prebuilt'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL:      ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY:     ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
