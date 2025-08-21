@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import nodemailer from 'nodemailer'
 
@@ -37,6 +38,12 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    // Create admin client for privileged operations
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
     // Verify admin authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     console.log('Auth check - User:', user?.id, 'Error:', authError)
@@ -70,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate invitation link using Supabase admin
-    const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
       options: {

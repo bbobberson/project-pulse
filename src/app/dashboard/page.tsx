@@ -127,6 +127,16 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              {currentUser?.role === 'admin' && (
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => router.push('/admin')}
+                  className="px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-colors"
+                >
+                  Admin
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
