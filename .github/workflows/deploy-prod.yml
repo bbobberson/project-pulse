@@ -10,13 +10,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v3
-        with: { version: 8 }
+      - uses: actions/setup-node@v4
+          with:
+            node-version: '18'
+            cache: 'npm'
 
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm build
-
-      - uses: amondnet/vercel-action@v25
+        - run: npm ci
+        - run: npm run build
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           vercel-token:  ${{ secrets.VERCEL_TOKEN }}
