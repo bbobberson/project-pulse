@@ -76,6 +76,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email and full name are required' }, { status: 400 })
     }
 
+    // Record the invitation in pm_invitations table
+    const { error: inviteError } = await supabaseAdmin
+      .from('pm_invitations')
+      .upsert([{
+        email: email,
+        full_name: fullName,
+        company: company || 'InfoWorks',
+        invite_status: 'pending',
+        invited_at: new Date().toISOString()
+      }])
+
+    if (inviteError) {
+      console.error('Error recording invitation:', inviteError)
+      return NextResponse.json({ error: 'Failed to record invitation' }, { status: 500 })
+    }
+
     // Generate invitation link using Supabase admin
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',

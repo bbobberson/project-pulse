@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-browser'
-import { supabaseAuth } from '@/lib/supabase-browser'
 
 interface ClientUser {
   email: string
@@ -61,7 +60,7 @@ export default function NewProject() {
 
     try {
       // Get current user to assign project to them
-      const { data: { user }, error: authError } = await supabaseAuth.auth.getUser()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
       if (authError || !user) {
         alert('Authentication error. Please login again.')
         router.push('/auth/login')

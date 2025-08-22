@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-browser'
 import InfoWorksLogo from '@/components/InfoWorksLogo'
+import { SignOutButton } from '@/components/SignOutButton'
 
 interface PMUser {
   id: string
@@ -85,7 +86,9 @@ export default function AdminDashboard() {
       const { data, error } = await supabase
         .from('pm_users')
         .select('*')
-        .order('created_at', { ascending: false })
+        .eq('invite_status', 'accepted')    // only accepted
+        .eq('is_active', true)              // only active
+        .order('full_name', { ascending: true })
 
       if (error) {
         console.error('Error fetching PM users:', error)
@@ -132,73 +135,43 @@ export default function AdminDashboard() {
 
   async function handleInvitePM(e: React.FormEvent) {
     e.preventDefault()
+    
+    // Prevent double execution
+    if (inviteLoading) return
     setInviteLoading(true)
 
+    // Freeze the invite data at the start
+    const inviteEmail = inviteFormData.email.trim()
+    const invitePayload = {
+      email: inviteEmail,
+      fullName: inviteFormData.fullName.trim(),
+      company: inviteFormData.company.trim() || 'InfoWorks'
+    }
+
+    console.log('🚀 Sending invitation to:', inviteEmail)
+
     try {
-      // Create invitation record (upsert to handle duplicates)
-      const { data, error } = await supabase
-        .from('pm_invitations')
-        .upsert([{
-          email: inviteFormData.email,
-          full_name: inviteFormData.fullName,
-          company: inviteFormData.company
-        }])
-        .select()
+      // Send the invitation email via API (which also handles the invitation record)
+      const emailResponse = await fetch('/api/send-invitation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(invitePayload)
+      })
 
-      if (error) {
-        console.error('Error inviting PM:', error)
-        alert(`Error inviting PM: ${error.message}`)
-        return
+      const emailResult = await emailResponse.json()
+
+      if (emailResult.success) {
+        alert(`🎉 Invitation email sent to ${inviteEmail}! They should receive it shortly and will be able to create their account.`)
+        // Reset form and refresh data on success
+        setInviteFormData({ email: '', fullName: '', company: 'InfoWorks' })
+        setShowInviteForm(false)
+        fetchInvitations()
+      } else {
+        console.error('Invitation error:', emailResult.error)
+        alert(`⚠️ Failed to send invitation: ${emailResult.error}. Please try again.`)
       }
-
-      // Send the witty invitation email
-      try {
-        const emailResponse = await fetch('/api/send-invitation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: inviteFormData.email,
-            fullName: inviteFormData.fullName,
-            company: inviteFormData.company
-          })
-        })
-
-        const emailResult = await emailResponse.json()
-
-        if (emailResult.success) {
-          alert(`🎉 Witty invitation email sent to ${inviteFormData.email}! They should receive it shortly and will be able to create their account.`)
-        } else {
-          // For testing - override email to send to your verified address
-          const testEmailResponse = await fetch('/api/send-invitation', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              email: 'jtrothman@gmail.com', // Force send to your email for testing
-              fullName: inviteFormData.fullName,
-              company: inviteFormData.company
-            })
-          })
-          
-          const testResult = await testEmailResponse.json()
-          if (testResult.success) {
-            alert(`📧 Test email sent to jtrothman@gmail.com! Check your inbox to see what ${inviteFormData.email} would receive.`)
-          } else {
-            alert(`⚠️ Invitation record created, but email failed to send: ${emailResult.error}. Please contact ${inviteFormData.email} directly with signup instructions.`)
-          }
-        }
-      } catch (emailError) {
-        console.error('Error sending email:', emailError)
-        alert(`⚠️ Invitation record created, but email failed to send. Please contact ${inviteFormData.email} directly with signup instructions.`)
-      }
-
-      // Reset form and refresh data
-      setInviteFormData({ email: '', fullName: '', company: 'InfoWorks' })
-      setShowInviteForm(false)
-      fetchInvitations()
 
     } catch (err) {
       console.error('Error:', err)
@@ -226,10 +199,6 @@ export default function AdminDashboard() {
     }
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut()
-    router.push('/')
-  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -292,12 +261,9 @@ export default function AdminDashboard() {
               >
                 + Invite PM
               </button>
-              <button
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-300 rounded-lg"
-              >
+              <SignOutButton className="text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-300 rounded-lg">
                 Logout
-              </button>
+              </SignOutButton>
             </div>
           </div>
         </div>
