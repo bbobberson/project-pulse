@@ -1,10 +1,10 @@
 name: Ship tagged releases to Vercel (prod)
 
-  on:
+on:
     push:
       tags: ['v*']          # deploys only version tags like v0.4-mvp
 
-  jobs:
+jobs:
     prod:
       runs-on: ubuntu-latest
       steps:
