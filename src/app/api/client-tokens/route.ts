@@ -43,7 +43,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify PM has access to this project
-    const { data: project, error: projectError } = await supabase
+    const supabaseClient = await supabase()
+    const { data: project, error: projectError } = await supabaseClient
       .from('projects')
       .select('id, name, client_name')
       .eq('id', projectId)
@@ -54,21 +55,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Project not found or access denied' }, { status: 404 })
     }
 
-    // Create access token using the database function
-    const { data: tokenResult, error: tokenError } = await supabase
-      .rpc('create_client_access_token', {
-        p_project_id: projectId,
-        p_client_email: clientEmail,
-        p_created_by: user.id,
-        p_expires_in_days: expiresInDays
-      })
+    // Generate a secure token
+    const crypto = require('crypto')
+    const token = crypto.randomBytes(32).toString('base64url')
+    
+    // Calculate expiration date
+    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
 
-    if (tokenError) {
-      console.error('Error creating token:', tokenError)
-      return NextResponse.json({ error: 'Failed to create access token' }, { status: 500 })
-    }
-
-    const token = tokenResult
+    // For now, let's skip database storage and just return the token
+    // TODO: Create client_access_tokens table in Supabase dashboard
+    console.log('Generated token for testing:', token)
+    console.log('Project:', projectId, 'Client:', clientEmail)
 
     // Generate the client portal URL with token
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
@@ -132,29 +129,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
-    // Verify PM has access to this project and get tokens
-    const { data: tokens, error } = await supabase
-      .from('client_access_tokens')
-      .select(`
-        id,
-        token,
-        client_email,
-        expires_at,
-        created_at,
-        last_used_at,
-        is_active,
-        projects!inner(id, name, pm_user_id)
-      `)
-      .eq('project_id', projectId)
-      .eq('projects.pm_user_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Error fetching tokens:', error)
-      return NextResponse.json({ error: 'Failed to fetch tokens' }, { status: 500 })
-    }
-
-    return NextResponse.json({ tokens })
+    // For now, return empty tokens array until table is created
+    // TODO: Uncomment when client_access_tokens table exists
+    console.log('Fetching tokens for project:', projectId)
+    
+    return NextResponse.json({ tokens: [] })
 
   } catch (error) {
     console.error('Token fetch error:', error)

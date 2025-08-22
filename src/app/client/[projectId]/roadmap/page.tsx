@@ -56,40 +56,32 @@ export default function ClientRoadmap() {
         return
       }
 
-      // Validate token and check if it matches this project
-      const { data: tokenResult, error: tokenError } = await supabase
-        .rpc('validate_client_token', { p_token: token })
+      // Validate token using our API endpoint
+      const tokenResponse = await fetch('/api/validate-token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      })
 
-      if (tokenError || !tokenResult || tokenResult.length === 0) {
-        setAuthError('Invalid or expired access token. Please contact your project manager for a new link.')
+      const tokenData = await tokenResponse.json()
+
+      if (!tokenResponse.ok || !tokenData.success) {
+        setAuthError(tokenData.error || 'Invalid or expired access token. Please contact your project manager for a new link.')
         setLoading(false)
         return
       }
 
-      const validatedToken = tokenResult[0]
-      
       // Check if token is for this specific project
-      if (validatedToken.project_id !== projectId) {
+      if (tokenData.tokenData.projectId !== projectId) {
         setAuthError('Access denied. This token does not grant access to this project.')
         setLoading(false)
         return
       }
 
-      // Fetch project data
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('id, name, client_name, start_date, end_date, pm_assigned, overall_status')
-        .eq('id', projectId)
-        .single()
-      
-      if (projectError) {
-        console.error('Error fetching project:', projectError)
-        setAuthError('Project not found or access denied.')
-        setLoading(false)
-        return
-      }
-
-      setProject(projectData)
+      // Use the project data from the token validation
+      setProject(tokenData.project)
       
       // Fetch roadmap tasks
       await fetchRoadmapTasks()

@@ -1,6 +1,6 @@
 'use client';
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { supabase } from '@/lib/supabase-browser';
 import { useRouter } from 'next/navigation';
 
 interface SignOutButtonProps {
@@ -9,12 +9,17 @@ interface SignOutButtonProps {
 }
 
 export function SignOutButton({ className, children }: SignOutButtonProps) {
-  const supabase = createClientComponentClient();
   const router = useRouter();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push('/');
+    try {
+      console.log('Logging out...'); // Debug log
+      await supabase.auth.signOut();
+      console.log('Logout successful, redirecting...'); // Debug log
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error); // Debug log
+    }
   };
 
   return (
