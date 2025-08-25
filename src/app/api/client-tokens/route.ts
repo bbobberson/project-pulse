@@ -62,13 +62,26 @@ export async function POST(request: NextRequest) {
     // Calculate expiration date
     const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
 
-    // For now, let's skip database storage and just return the token
-    // TODO: Create client_access_tokens table in Supabase dashboard
-    console.log('Generated token for testing:', token)
-    console.log('Project:', projectId, 'Client:', clientEmail)
+    // Save token to database
+    const { error: insertError } = await supabaseClient
+      .from('client_access_tokens')
+      .insert({
+        token,
+        project_id: projectId,
+        client_email: clientEmail,
+        expires_at: expiresAt.toISOString(),
+        created_by: user.id,
+        is_active: true
+      })
 
-    // Generate the client portal URL with token
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+    if (insertError) {
+      console.error('Token save error:', insertError)
+      return NextResponse.json({ error: 'Failed to create token' }, { status: 500 })
+    }
+
+    // Generate the client portal URL with token - use request origin or env var
+    const requestUrl = new URL(request.url)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
     const clientUrl = `${baseUrl}/client?token=${token}`
 
     return NextResponse.json({
@@ -129,11 +142,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
-    // For now, return empty tokens array until table is created
-    // TODO: Uncomment when client_access_tokens table exists
-    console.log('Fetching tokens for project:', projectId)
+    // Fetch existing tokens for the project
+    const supabaseClient = await supabase()
+    const { data: tokens, error: tokensError } = await supabaseClient
+      .from('client_access_tokens')
+      .select('*')
+      .eq('project_id', projectId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
+    if (tokensError) {
+      console.error('Token fetch error:', tokensError)
+      return NextResponse.json({ error: 'Failed to fetch tokens' }, { status: 500 })
+    }
     
-    return NextResponse.json({ tokens: [] })
+    return NextResponse.json({ tokens: tokens || [] })
 
   } catch (error) {
     console.error('Token fetch error:', error)
