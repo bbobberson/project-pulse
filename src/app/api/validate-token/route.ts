@@ -9,38 +9,50 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Token is required' }, { status: 400 })
     }
 
-    // Since we don't have the database table yet, let's create a temporary validation
-    // For now, just validate that it looks like a valid token format
-    if (!token || token.length < 10) {
-      return NextResponse.json({ error: 'Invalid token format' }, { status: 401 })
-    }
-
-    // Temporary mapping for the generated token - this will be replaced with proper DB lookup
     const supabaseClient = await supabase()
     
-    // Map this specific token to the correct project
-    const tokenProjectId = 'aaa362e7-a762-49b2-969f-483d7d3c415f' // The project where token was generated
-    
+    // Look up the token in the database
+    const { data: tokenData, error: tokenError } = await supabaseClient
+      .from('client_access_tokens')
+      .select('*')
+      .eq('token', token)
+      .eq('is_active', true)
+      .single()
+
+    if (tokenError || !tokenData) {
+      return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
+    }
+
+    // Check if token is expired
+    if (tokenData.expires_at && new Date(tokenData.expires_at) < new Date()) {
+      return NextResponse.json({ error: 'Token has expired' }, { status: 401 })
+    }
+
+    // Get the project associated with this token
     const { data: project, error: projectError } = await supabaseClient
       .from('projects')
       .select('*')
-      .eq('id', tokenProjectId)
+      .eq('id', tokenData.project_id)
       .single()
 
     if (projectError || !project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
 
-    const testProject = project
+    // Update last_accessed timestamp
+    await supabaseClient
+      .from('client_access_tokens')
+      .update({ last_accessed: new Date().toISOString() })
+      .eq('id', tokenData.id)
 
     return NextResponse.json({
       success: true,
       tokenData: {
-        projectId: testProject.id,
-        clientEmail: 'test@client.com',
-        expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        projectId: project.id,
+        clientEmail: tokenData.client_email,
+        expiresAt: tokenData.expires_at
       },
-      project: testProject
+      project: project
     })
 
   } catch (error) {
