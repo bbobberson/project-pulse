@@ -2,7 +2,7 @@ name: Ship tagged releases to Vercel (prod)
 
 on:
     push:
-      tags: ['v*']          # deploys only version tags like v0.4-mvp
+      tags: ['v*']
 
 jobs:
     prod:
@@ -16,20 +16,15 @@ jobs:
             cache: 'npm'
 
         - run: npm ci
-        - run: npm run build
-          env:
-            NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
         - uses: amondnet/vercel-action@v25
           with:
             github-token: ${{ secrets.GITHUB_TOKEN }}
-            vercel-token:  ${{ secrets.VERCEL_TOKEN }}
+            vercel-token: ${{ secrets.VERCEL_TOKEN }}
             vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-            vercel-org-id:    ${{ secrets.VERCEL_ORG_ID }}
-            vercel-args: '--prod --prebuilt'
+            vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+            vercel-args: '--prod'
           env:
-            NEXT_PUBLIC_SUPABASE_URL:      ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+            NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
             NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-            SUPABASE_SERVICE_ROLE_KEY:     ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+            SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
