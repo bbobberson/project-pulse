@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectId, clientEmail, expiresInDays = 30 } = await request.json()
+    const { projectId, clientEmail, clientName, expiresInDays = 30 } = await request.json()
 
     if (!projectId || !clientEmail) {
       return NextResponse.json({ error: 'Project ID and client email are required' }, { status: 400 })
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
         token,
         project_id: projectId,
         client_email: clientEmail,
+        client_name: clientName || clientEmail.split('@')[0], // Use email prefix if no name provided
         expires_at: expiresAt.toISOString(),
         created_by: user.id,
         is_active: true
