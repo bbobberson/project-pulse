@@ -22,16 +22,25 @@ interface Project {
   client_name: string
 }
 
+interface ClientUser {
+  id: string
+  name: string
+  email: string
+  role: string
+  email_notifications: boolean
+}
+
 export default function ClientAccessPage() {
   const router = useRouter()
   const params = useParams()
   const projectId = params.projectId as string
 
   const [project, setProject] = useState<Project | null>(null)
+  const [clientUsers, setClientUsers] = useState<ClientUser[]>([])
   const [tokens, setTokens] = useState<Token[]>([])
   const [loading, setLoading] = useState(true)
   const [generating, setGenerating] = useState(false)
-  const [newTokenEmail, setNewTokenEmail] = useState('')
+  const [selectedClientEmail, setSelectedClientEmail] = useState('')
   const [newTokenDays, setNewTokenDays] = useState(30)
   const [generatedLink, setGeneratedLink] = useState('')
 
@@ -65,6 +74,21 @@ export default function ClientAccessPage() {
 
       setProject(projectData)
 
+      // Get client users for this project
+      const { data: clientUsersData, error: clientUsersError } = await supabase
+        .from('client_users')
+        .select('id, name, email, role, email_notifications')
+        .eq('project_id', projectId)
+        .order('name')
+
+      if (!clientUsersError && clientUsersData) {
+        setClientUsers(clientUsersData)
+        // Set first client user as default
+        if (clientUsersData.length > 0) {
+          setSelectedClientEmail(clientUsersData[0].email)
+        }
+      }
+
       // Get existing tokens
       const tokenResponse = await fetch(`/api/client-tokens?projectId=${projectId}`)
       const tokenData = await tokenResponse.json()
@@ -80,8 +104,8 @@ export default function ClientAccessPage() {
   }
 
   async function generateToken() {
-    if (!newTokenEmail.trim()) {
-      alert('Please enter a client email address')
+    if (!selectedClientEmail.trim()) {
+      alert('Please select a client user')
       return
     }
 
@@ -95,7 +119,7 @@ export default function ClientAccessPage() {
         },
         body: JSON.stringify({
           projectId,
-          clientEmail: newTokenEmail,
+          clientEmail: selectedClientEmail,
           expiresInDays: newTokenDays
         })
       })
@@ -104,7 +128,7 @@ export default function ClientAccessPage() {
 
       if (data.success) {
         setGeneratedLink(data.clientUrl)
-        setNewTokenEmail('')
+        setSelectedClientEmail('')
         setNewTokenDays(30)
         fetchProjectAndTokens() // Refresh token list
       } else {
@@ -187,19 +211,41 @@ export default function ClientAccessPage() {
         {/* Generate New Token Section */}
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Generate New Access Link</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Client Email Address
-              </label>
-              <input
-                type="email"
-                value={newTokenEmail}
-                onChange={(e) => setNewTokenEmail(e.target.value)}
-                placeholder="client@company.com"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-              />
+          {clientUsers.length === 0 ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">No Client Users Found</h3>
+                  <p className="mt-1 text-sm text-yellow-700">
+                    You need to add client users to this project before generating access links. Go to the project details page and add client users in the "Client Users" section.
+                  </p>
+                </div>
+              </div>
             </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Select Client User
+                </label>
+                <select
+                  value={selectedClientEmail}
+                  onChange={(e) => setSelectedClientEmail(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                >
+                  <option value="">Choose a client user...</option>
+                  {clientUsers.map((user) => (
+                    <option key={user.id} value={user.email}>
+                      {user.name} ({user.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Expires in (days)
@@ -215,11 +261,12 @@ export default function ClientAccessPage() {
                 <option value={60}>60 days</option>
                 <option value={90}>90 days</option>
               </select>
+              </div>
             </div>
-          </div>
+          )}
           <button
             onClick={generateToken}
-            disabled={generating || !newTokenEmail.trim()}
+            disabled={generating || !selectedClientEmail.trim() || clientUsers.length === 0}
             style={{ backgroundColor: '#1C2B45' }}
             className="mt-4 px-6 py-2 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
           >

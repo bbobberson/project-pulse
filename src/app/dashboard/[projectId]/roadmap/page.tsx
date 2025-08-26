@@ -211,6 +211,7 @@ export default function ProjectRoadmap() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [draggedTemplate, setDraggedTemplate] = useState<TaskTemplate | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
   const sensors = useSensors(useSensor(PointerSensor))
 
@@ -219,6 +220,14 @@ export default function ProjectRoadmap() {
     fetchTaskTemplates()
     fetchRoadmapTasks()
   }, [projectId])
+
+  // Initialize all categories as collapsed when task templates are loaded
+  useEffect(() => {
+    if (taskTemplates.length > 0) {
+      const allCategories = new Set(taskTemplates.map(template => template.category))
+      setCollapsedCategories(allCategories)
+    }
+  }, [taskTemplates])
 
   async function fetchProject() {
     try {
@@ -392,8 +401,35 @@ export default function ProjectRoadmap() {
     return acc
   }, {} as Record<string, TaskTemplate[]>)
 
-  // Generate weeks (show at least 12 weeks)
-  const maxWeek = Math.max(12, ...Object.keys(tasksByWeek).map(Number))
+  // Toggle category collapse
+  const toggleCategory = (category: string) => {
+    const newCollapsed = new Set(collapsedCategories)
+    if (newCollapsed.has(category)) {
+      newCollapsed.delete(category)
+    } else {
+      newCollapsed.add(category)
+    }
+    setCollapsedCategories(newCollapsed)
+  }
+
+  // Calculate weeks based on project duration
+  const calculateProjectWeeks = () => {
+    if (!project?.start_date || !project?.end_date) {
+      // Fallback to 12 weeks if dates aren't available
+      return 12
+    }
+    
+    const startDate = new Date(project.start_date)
+    const endDate = new Date(project.end_date)
+    const diffInMs = endDate.getTime() - startDate.getTime()
+    const diffInWeeks = Math.ceil(diffInMs / (1000 * 60 * 60 * 24 * 7))
+    
+    // Ensure at least 4 weeks and at most 52 weeks
+    return Math.max(4, Math.min(52, diffInWeeks))
+  }
+  
+  const projectWeeks = calculateProjectWeeks()
+  const maxWeek = Math.max(projectWeeks, ...Object.keys(tasksByWeek).map(Number))
   const weeks = Array.from({ length: maxWeek }, (_, i) => i + 1)
 
   if (loading) {
@@ -463,23 +499,39 @@ export default function ProjectRoadmap() {
               />
             </div>
             
-            {Object.entries(templatesByCategory).map(([category, templates]) => (
-              <div key={category} className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-3 uppercase tracking-wide">
-                  {category}
-                </h3>
-                <SortableContext 
-                  items={templates.map(t => `template-${t.id}`)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div className="space-y-2">
-                    {templates.map((template) => (
-                      <DraggableTaskTemplate key={template.id} template={template} />
-                    ))}
-                  </div>
-                </SortableContext>
-              </div>
-            ))}
+            {Object.entries(templatesByCategory).map(([category, templates]) => {
+              const isCollapsed = collapsedCategories.has(category)
+              return (
+                <div key={category} className="mb-4">
+                  <button
+                    onClick={() => toggleCategory(category)}
+                    className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors"
+                  >
+                    <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
+                      {category} <span className="text-gray-500 font-normal">({templates.length})</span>
+                    </h3>
+                    <div className={`transform transition-transform ${isCollapsed ? '' : 'rotate-90'}`}>
+                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </button>
+                  
+                  {!isCollapsed && (
+                    <SortableContext 
+                      items={templates.map(t => `template-${t.id}`)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="space-y-2 mt-3 ml-2">
+                        {templates.map((template) => (
+                          <DraggableTaskTemplate key={template.id} template={template} />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  )}
+                </div>
+              )
+            })}
           </div>
 
           {/* Timeline */}

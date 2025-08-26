@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase-browser'
 
@@ -9,6 +9,12 @@ interface ClientUser {
   name: string
   role: 'viewer' | 'stakeholder' | 'admin'
   email_notifications: boolean
+}
+
+interface PMUser {
+  id: string
+  full_name: string
+  email: string
 }
 
 export default function NewProject() {
@@ -31,6 +37,112 @@ export default function NewProject() {
     role: 'viewer',
     email_notifications: true
   })
+  const [pmUsers, setPmUsers] = useState<PMUser[]>([])
+  const [currentUser, setCurrentUser] = useState<PMUser | null>(null)
+  const [previousTeamMembers, setPreviousTeamMembers] = useState<string[]>([])
+  const [teamMemberInput, setTeamMemberInput] = useState('')
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
+
+  // Fetch PM users and current user on component mount
+  useEffect(() => {
+    fetchPmUsers()
+    fetchCurrentUser()
+    fetchPreviousTeamMembers()
+  }, [])
+
+  const fetchPmUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pm_users')
+        .select('id, full_name, email')
+        .order('full_name')
+      
+      if (error) {
+        console.error('Error fetching PM users:', error)
+      } else {
+        setPmUsers(data || [])
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const fetchCurrentUser = async () => {
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) return
+
+      const { data, error } = await supabase
+        .from('pm_users')
+        .select('id, full_name, email')
+        .eq('id', user.id)
+        .single()
+      
+      if (!error && data) {
+        setCurrentUser(data)
+        setFormData(prev => ({
+          ...prev,
+          pm_assigned: data.full_name
+        }))
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const fetchPreviousTeamMembers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('team_members')
+      
+      if (error) {
+        console.error('Error fetching previous team members:', error)
+      } else {
+        const allMembers = new Set<string>()
+        data?.forEach(project => {
+          if (project.team_members && Array.isArray(project.team_members)) {
+            project.team_members.forEach((member: string) => {
+              if (member.trim()) allMembers.add(member.trim())
+            })
+          }
+        })
+        setPreviousTeamMembers(Array.from(allMembers).sort())
+      }
+    } catch (err) {
+      console.error('Error:', err)
+    }
+  }
+
+  const handleTeamMemberInputChange = (value: string) => {
+    setTeamMemberInput(value)
+    
+    if (value.length > 0) {
+      const filtered = previousTeamMembers.filter(member =>
+        member.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 5) // Show max 5 suggestions
+      setFilteredSuggestions(filtered)
+      setShowSuggestions(filtered.length > 0)
+    } else {
+      setShowSuggestions(false)
+      setFilteredSuggestions([])
+    }
+  }
+
+  const selectTeamMemberSuggestion = (member: string) => {
+    const currentMembers = formData.team_members ? formData.team_members.split(',').map(m => m.trim()).filter(Boolean) : []
+    if (!currentMembers.includes(member)) {
+      const newMembers = [...currentMembers, member].join(', ')
+      setFormData(prev => ({
+        ...prev,
+        team_members: newMembers
+      }))
+    }
+    setTeamMemberInput('')
+    setShowSuggestions(false)
+    setFilteredSuggestions([])
+  }
 
   const addClientUser = () => {
     if (!newUser.email.trim()) return
@@ -75,7 +187,7 @@ export default function NewProject() {
             ...formData,
             team_members: formData.team_members.split(',').map(member => member.trim()).filter(Boolean),
             end_date: formData.end_date || null,
-            pm_user_id: user.id, // Assign to current PM user
+            pm_user_id: currentUser?.id || user.id, // Use selected PM or fallback to current user
             created_by: user.id   // Track who created it
           }
         ])
@@ -127,7 +239,7 @@ export default function NewProject() {
     }
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -195,18 +307,27 @@ export default function NewProject() {
             {/* PM Assigned */}
             <div>
               <label htmlFor="pm_assigned" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Manager *
+                Assigned PM *
               </label>
-              <input
-                type="text"
+              <select
                 id="pm_assigned"
                 name="pm_assigned"
                 required
                 value={formData.pm_assigned}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="e.g., Sarah Johnson"
-              />
+                onChange={(e) => {
+                  const selectedPM = pmUsers.find(pm => pm.full_name === e.target.value)
+                  setCurrentUser(selectedPM || null)
+                  handleChange(e)
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+              >
+                <option value="">Select Assigned PM</option>
+                {pmUsers.map((pm) => (
+                  <option key={pm.id} value={pm.full_name}>
+                    {pm.full_name}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Start Date */}
@@ -228,12 +349,13 @@ export default function NewProject() {
             {/* End Date */}
             <div>
               <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
-                End Date (Optional)
+                End Date *
               </label>
               <input
                 type="date"
                 id="end_date"
                 name="end_date"
+                required
                 value={formData.end_date}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
@@ -245,16 +367,51 @@ export default function NewProject() {
               <label htmlFor="team_members" className="block text-sm font-medium text-gray-700 mb-2">
                 Team Members
               </label>
-              <input
-                type="text"
-                id="team_members"
-                name="team_members"
-                value={formData.team_members}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
-                placeholder="e.g., John Smith, Jane Doe, Mike Wilson (comma separated)"
-              />
-              <p className="text-sm text-gray-500 mt-1">Separate multiple team members with commas</p>
+              <div className="relative">
+                <input
+                  type="text"
+                  id="team_members"
+                  name="team_members"
+                  value={formData.team_members}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  placeholder="e.g., John Smith, Jane Doe, Mike Wilson (comma separated)"
+                />
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    placeholder="Type to add team member..."
+                    value={teamMemberInput}
+                    onChange={(e) => handleTeamMemberInputChange(e.target.value)}
+                    onFocus={() => {
+                      if (previousTeamMembers.length > 0 && !teamMemberInput) {
+                        setFilteredSuggestions(previousTeamMembers.slice(0, 5))
+                        setShowSuggestions(true)
+                      }
+                    }}
+                    onBlur={() => {
+                      // Delay hiding suggestions to allow clicking
+                      setTimeout(() => setShowSuggestions(false), 200)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm"
+                  />
+                  {showSuggestions && filteredSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      {filteredSuggestions.map((member, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => selectTeamMemberSuggestion(member)}
+                          className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm text-gray-900 border-b border-gray-100 last:border-b-0"
+                        >
+                          {member}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-1">Separate multiple team members with commas, or use the suggestion box below</p>
             </div>
 
             {/* OneDrive Link */}

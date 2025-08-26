@@ -232,12 +232,6 @@ function ClientPortalContent() {
                   <p className="text-gray-400 text-sm mt-1">Client Portal</p>
                 </div>
               </div>
-              <a 
-                href="/"
-                className="px-6 py-3 text-gray-500 hover:text-gray-700 font-medium transition-colors"
-              >
-                Back to Home
-              </a>
             </div>
           </div>
         </div>
@@ -332,12 +326,6 @@ function ClientPortalContent() {
                 <h1 className="text-2xl font-bold text-gray-900">Project Pulse</h1>
                 <p className="text-gray-600">Client Portal</p>
               </div>
-              <a 
-                href="/"
-                className="text-gray-600 hover:text-gray-900"
-              >
-                ← Back to Home
-              </a>
             </div>
           </div>
         </div>
@@ -380,12 +368,6 @@ function ClientPortalContent() {
                 </div>
               )}
             </div>
-            <a 
-              href="/"
-              className="text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-300 rounded-lg"
-            >
-              ← Back to Home
-            </a>
           </div>
         </div>
       </div>

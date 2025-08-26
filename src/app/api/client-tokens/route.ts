@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
@@ -36,15 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { projectId, clientEmail, clientName, expiresInDays = 30 } = await request.json()
+    const body = await request.json()
+    const { projectId, clientEmail, clientName, expiresInDays = 30 } = body
 
     if (!projectId || !clientEmail) {
       return NextResponse.json({ error: 'Project ID and client email are required' }, { status: 400 })
     }
 
     // Verify PM has access to this project
-    const supabaseClient = await supabase()
-    const { data: project, error: projectError } = await supabaseClient
+    const { data: project, error: projectError } = await supabaseAuth
       .from('projects')
       .select('id, name, client_name')
       .eq('id', projectId)
@@ -60,16 +59,15 @@ export async function POST(request: NextRequest) {
     const token = crypto.randomBytes(32).toString('base64url')
     
     // Calculate expiration date
-    const expiresAt = new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000)
+    const expiresAt = new Date(Date.now() + (expiresInDays || 30) * 24 * 60 * 60 * 1000)
 
     // Save token to database
-    const { error: insertError } = await supabaseClient
+    const { error: insertError } = await supabaseAuth
       .from('client_access_tokens')
       .insert({
         token,
         project_id: projectId,
         client_email: clientEmail,
-        client_name: clientName || clientEmail.split('@')[0], // Use email prefix if no name provided
         expires_at: expiresAt.toISOString(),
         created_by: user.id,
         is_active: true
@@ -77,7 +75,15 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Token save error:', insertError)
-      return NextResponse.json({ error: 'Failed to create token' }, { status: 500 })
+      console.error('Insert data was:', {
+        token,
+        project_id: projectId,
+        client_email: clientEmail,
+        expires_at: expiresAt.toISOString(),
+        created_by: user.id,
+        is_active: true
+      })
+      return NextResponse.json({ error: 'Failed to create token', details: insertError.message }, { status: 500 })
     }
 
     // Generate the client portal URL with token - use request origin or env var
@@ -143,9 +149,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
     }
 
-    // Fetch existing tokens for the project
-    const supabaseClient = await supabase()
-    const { data: tokens, error: tokensError } = await supabaseClient
+    // Fetch existing tokens for the project  
+    const { data: tokens, error: tokensError } = await supabaseAuth
       .from('client_access_tokens')
       .select('*')
       .eq('project_id', projectId)

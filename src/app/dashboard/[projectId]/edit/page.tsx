@@ -307,12 +307,13 @@ export default function EditProject() {
             {/* End Date */}
             <div>
               <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
-                End Date (Optional)
+                End Date *
               </label>
               <input
                 type="date"
                 id="end_date"
                 name="end_date"
+                required
                 value={formData.end_date}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
