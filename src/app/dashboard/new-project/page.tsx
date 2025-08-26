@@ -7,7 +7,6 @@ import { supabase } from '@/lib/supabase-browser'
 interface ClientUser {
   email: string
   name: string
-  role: 'viewer' | 'stakeholder' | 'admin'
   email_notifications: boolean
 }
 
@@ -34,7 +33,6 @@ export default function NewProject() {
   const [newUser, setNewUser] = useState<ClientUser>({
     email: '',
     name: '',
-    role: 'viewer',
     email_notifications: true
   })
   const [pmUsers, setPmUsers] = useState<PMUser[]>([])
@@ -157,7 +155,6 @@ export default function NewProject() {
     setNewUser({
       email: '',
       name: '',
-      role: 'viewer',
       email_notifications: true
     })
   }
@@ -207,7 +204,6 @@ export default function NewProject() {
           project_id: projectData.id,
           email: user.email,
           name: user.name || null,
-          role: user.role,
           email_notifications: user.email_notifications,
           created_by: formData.pm_assigned
         }))
@@ -457,7 +453,7 @@ export default function NewProject() {
               {/* Add New User Form */}
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
                 <h4 className="text-sm font-medium text-gray-900 mb-3">Add Client User</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   <div>
                     <input
                       type="email"
@@ -475,17 +471,6 @@ export default function NewProject() {
                       onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
                     />
-                  </div>
-                  <div>
-                    <select
-                      value={newUser.role}
-                      onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'viewer' | 'stakeholder' | 'admin' }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
-                    >
-                      <option value="viewer">Viewer</option>
-                      <option value="stakeholder">Stakeholder</option>
-                      <option value="admin">Admin</option>
-                    </select>
                   </div>
                   <div>
                     <button
@@ -524,9 +509,6 @@ export default function NewProject() {
                             <p className="text-sm font-medium text-gray-900">{user.name || user.email}</p>
                             {user.name && <p className="text-sm text-gray-500">{user.email}</p>}
                           </div>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                            {user.role}
-                          </span>
                           {user.email_notifications && (
                             <span className="text-xs text-green-600">📧 Notifications</span>
                           )}
