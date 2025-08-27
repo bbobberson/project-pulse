@@ -24,13 +24,15 @@ interface PresentModeDashboardProps {
   currentUser: any
   pendingInvitations: any[]
   onShowInviteModal: () => void
+  onToggleToFutureMode: () => void
 }
 
 export default function PresentModeDashboard({ 
   projects, 
   currentUser, 
   pendingInvitations, 
-  onShowInviteModal 
+  onShowInviteModal,
+  onToggleToFutureMode
 }: PresentModeDashboardProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
@@ -51,7 +53,15 @@ export default function PresentModeDashboard({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
             <div className="flex items-center space-x-6">
-              <InfoWorksLogo width={120} height={36} />
+              <motion.div
+                className="cursor-pointer"
+                onClick={onToggleToFutureMode}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Click to toggle to Future Mode"
+              >
+                <InfoWorksLogo width={120} height={36} />
+              </motion.div>
               <div className="h-6 w-px bg-gray-300" />
               <div>
                 <h1 className="text-2xl font-semibold text-gray-900">Project Pulse</h1>

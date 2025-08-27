@@ -27,24 +27,26 @@ interface FutureModeUniverseProps {
   currentUser: any
   pendingInvitations: any[]
   onShowInviteModal: () => void
+  onToggleToPresentMode: () => void
 }
 
 export default function FutureModeUniverse({ 
   projects, 
   currentUser, 
   pendingInvitations, 
-  onShowInviteModal 
+  onShowInviteModal,
+  onToggleToPresentMode
 }: FutureModeUniverseProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   
-  // 🚀 REVOLUTIONARY HYBRID STATE
-  const [viewMode, setViewMode] = useState<'overview' | 'immersive'>('overview')
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  // 🚀 COSMIC OVERVIEW STATE
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [hoveredProject, setHoveredProject] = useState<string | null>(null)
   const [isClient, setIsClient] = useState(false)
+  const [viewMode, setViewMode] = useState<'overview' | 'immersive'>('overview')
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
 
   useEffect(() => {
     setIsClient(true)
@@ -53,14 +55,12 @@ export default function FutureModeUniverse({
 
   // 🎯 MOUSE TRACKING FOR PROXIMITY EFFECTS
   useEffect(() => {
-    if (viewMode === 'overview') {
-      const handleMouseMove = (e: MouseEvent) => {
-        setMousePosition({ x: e.clientX, y: e.clientY })
-      }
-      window.addEventListener('mousemove', handleMouseMove)
-      return () => window.removeEventListener('mousemove', handleMouseMove)
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [viewMode])
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
 
   // 🚀 REVOLUTIONARY MODE FUNCTIONS
   const enterImmersiveMode = (project: Project) => {
@@ -188,13 +188,10 @@ export default function FutureModeUniverse({
     }
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">Loading cosmic interface...</div>
-      </div>
-    )
-  }
+  // Loading handled by parent Dashboard component
+
+  // All immersive mode functionality integrated into main cosmic view
+  
 
   // 🌟 IMMERSIVE MODE - Full screen project experience
   if (viewMode === 'immersive' && selectedProject) {
@@ -206,50 +203,81 @@ export default function FutureModeUniverse({
         <div className={`absolute inset-0 bg-gradient-to-br ${statusViz.color} opacity-10`} />
         
         {/* Back button */}
-        <button
+        <motion.button
+          initial={{ opacity: 0, x: -50 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5 }}
           onClick={exitImmersiveMode}
           className="fixed top-6 left-6 z-50 px-6 py-3 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
         >
           ← Back to Cosmos
-        </button>
+        </motion.button>
 
-        {/* Project content - SIMPLE AND ALWAYS VISIBLE */}
+        {/* Project content - BIG HEADER */}
         <div className="min-h-screen flex items-center justify-center px-12 relative z-10">
           <div className="max-w-6xl mx-auto text-center">
-            <h1 className="text-8xl font-extralight text-white mb-8 leading-none tracking-tight">
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8 }}
+              className="text-6xl md:text-7xl font-extralight text-white mb-8 leading-none tracking-tight"
+              style={{ fontFamily: "'Orbitron', sans-serif" }}
+            >
               {selectedProject.name}
-            </h1>
+            </motion.h1>
             
-            <p className="text-3xl font-light text-white/70 mb-12">
+            <motion.p 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-3xl font-light text-white/70 mb-12"
+            >
               {selectedProject.client_name}
-            </p>
+            </motion.p>
             
-            <div className="text-2xl font-medium text-white mb-16 flex items-center justify-center gap-4">
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-2xl font-medium text-white mb-16 flex items-center justify-center gap-4"
+            >
               <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${statusViz.color}`}></div>
               Status: {selectedProject.overall_status.replace('-', ' ')}
-            </div>
+              <span className="text-4xl ml-2">{statusViz.particles}</span>
+            </motion.div>
 
             {/* Action buttons */}
-            <div className="flex gap-6 justify-center">
-              <button 
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="flex gap-6 justify-center flex-wrap"
+            >
+              <motion.button 
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => router.push(`/dashboard/${selectedProject.id}/update-pulse`)}
                 className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
               >
                 Update Pulse
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => router.push(`/dashboard/${selectedProject.id}/roadmap`)}
                 className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
               >
                 Roadmap
-              </button>
-              <button 
+              </motion.button>
+              <motion.button 
+                whileHover={{ scale: 1.05, y: -5 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => router.push(`/dashboard/${selectedProject.id}/edit`)}
                 className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
               >
                 Settings
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -275,8 +303,14 @@ export default function FutureModeUniverse({
           <div className="max-w-7xl mx-auto px-8 py-5">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-8">
-                {/* 🔮 LIVING INFOWORKS LOGO - BASED ON REAL BRAND */}
-                <motion.div className="relative flex items-center">
+                {/* 🔮 LIVING INFOWORKS LOGO - CLICKABLE EASTER EGG TOGGLE */}
+                <motion.div 
+                  className="relative flex items-center cursor-pointer"
+                  onClick={onToggleToPresentMode}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Click to toggle to Present Mode"
+                >
                   <svg width="120" height="36" viewBox="0 0 120 36" className="overflow-visible">
                     <defs>
                       <filter id="logoGlow">

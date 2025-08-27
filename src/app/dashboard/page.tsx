@@ -9,7 +9,6 @@ import InfoWorksLogo from '@/components/InfoWorksLogo'
 import ClientTokenManager from '@/components/ClientTokenManager'
 import OnboardingModal from '@/components/OnboardingModal'
 import { SignOutButton } from '@/components/SignOutButton'
-import DashboardModeToggle from '@/components/DashboardModeToggle'
 import PresentModeDashboard from '@/components/PresentModeDashboard'
 import FutureModeUniverse from '@/components/FutureModeUniverse'
 
@@ -97,31 +96,7 @@ export default function Dashboard() {
   }, [])
 
   // 🌌 CLIENT-SIDE INITIALIZATION
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  // 🎯 MOUSE TRACKING FOR PROXIMITY EFFECTS
-  useEffect(() => {
-    if (viewMode === 'overview') {
-      const handleMouseMove = (e: MouseEvent) => {
-        setMousePosition({ x: e.clientX, y: e.clientY })
-      }
-      window.addEventListener('mousemove', handleMouseMove)
-      return () => window.removeEventListener('mousemove', handleMouseMove)
-    }
-  }, [viewMode])
-
-  // 🚀 REVOLUTIONARY MODE FUNCTIONS
-  const enterImmersiveMode = (project: Project) => {
-    setSelectedProject(project)
-    setViewMode('immersive')
-  }
-
-  const exitImmersiveMode = () => {
-    setViewMode('overview')
-    setSelectedProject(null)
-  }
+  // No additional effects needed - handled by child components
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -231,111 +206,20 @@ export default function Dashboard() {
       baseWidth *= 1.08  // 8% larger for at-risk
       baseHeight *= 1.08
     }
-
-    return { width: Math.round(baseWidth), height: Math.round(baseHeight) }
   }
 
-  // 🎨 STATUS VISUALIZATION SYSTEM
-  const getStatusVisualization = (status: string) => {
-    switch (status) {
-      case 'on-track':
-        return {
-          color: 'from-emerald-400 to-green-600',
-          glow: 'shadow-emerald-400/40',
-          particles: '✨',
-          bgOpacity: 'bg-emerald-500/10'
-        }
-      case 'at-risk':
-        return {
-          color: 'from-amber-400 to-orange-500', 
-          glow: 'shadow-amber-400/40',
-          particles: '⚡',
-          bgOpacity: 'bg-amber-500/10'
-        }
-      case 'off-track':
-        return {
-          color: 'from-red-400 to-rose-600',
-          glow: 'shadow-rose-400/40', 
-          particles: '🔥',
-          bgOpacity: 'bg-rose-500/10'
-        }
-      default:
-        return {
-          color: 'from-gray-400 to-gray-600',
-          glow: 'shadow-gray-400/40',
-          particles: '💫',
-          bgOpacity: 'bg-gray-500/10'
-        }
-    }
-  }
+  // Helper functions moved to FutureModeUniverse component
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white text-lg">Loading cosmic interface...</div>
-      </div>
-    )
-  }
-
-  // 🌟 IMMERSIVE MODE - Full screen project experience
-  if (viewMode === 'immersive' && selectedProject) {
-    const statusViz = getStatusVisualization(selectedProject.overall_status)
-    
-    return (
-      <div className="min-h-screen bg-black relative overflow-hidden">
-        {/* Background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${statusViz.color} opacity-10`} />
-        
-        {/* Back button */}
-        <button
-          onClick={exitImmersiveMode}
-          className="fixed top-6 left-6 z-50 px-6 py-3 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
-        >
-          ← Back to Cosmos
-        </button>
-
-        {/* Project content - SIMPLE AND ALWAYS VISIBLE */}
-        <div className="min-h-screen flex items-center justify-center px-12 relative z-10">
-          <div className="max-w-6xl mx-auto text-center">
-            <h1 className="text-8xl font-extralight text-white mb-8 leading-none tracking-tight">
-              {selectedProject.name}
-            </h1>
-            
-            <p className="text-3xl font-light text-white/70 mb-12">
-              {selectedProject.client_name}
-            </p>
-            
-            <div className="text-2xl font-medium text-white mb-16 flex items-center justify-center gap-4">
-              <div className={`w-6 h-6 rounded-full bg-gradient-to-r ${statusViz.color}`}></div>
-              Status: {selectedProject.overall_status.replace('-', ' ')}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex gap-6 justify-center">
-              <button 
-                onClick={() => router.push(`/dashboard/${selectedProject.id}/update-pulse`)}
-                className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
-              >
-                Update Pulse
-              </button>
-              <button 
-                onClick={() => router.push(`/dashboard/${selectedProject.id}/roadmap`)}
-                className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
-              >
-                Roadmap
-              </button>
-              <button 
-                onClick={() => router.push(`/dashboard/${selectedProject.id}/edit`)}
-                className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
-              >
-                Settings
-              </button>
-            </div>
-          </div>
+      <div className={`min-h-screen flex items-center justify-center ${dashboardMode === 'future' ? 'bg-black' : 'bg-gray-50'}`}>
+        <div className={`text-lg ${dashboardMode === 'future' ? 'text-white' : 'text-gray-900'}`}>
+          {dashboardMode === 'future' ? 'Loading cosmic interface...' : 'Loading dashboard...'}
         </div>
       </div>
     )
   }
+
 
   // 🌌 MODE TOGGLE SYSTEM
   return (
@@ -345,18 +229,6 @@ export default function Dashboard() {
         <OnboardingModal userEmail={currentUser.email} />
       )}
 
-      {/* Mode Toggle - Fixed Position */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-        className="fixed top-4 right-4 z-50"
-      >
-        <DashboardModeToggle
-          mode={dashboardMode}
-          onToggle={setDashboardMode}
-        />
-      </motion.div>
 
       {/* Mode-Based Dashboard Rendering */}
       <AnimatePresence mode="wait">
@@ -373,6 +245,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               pendingInvitations={pendingInvitations}
               onShowInviteModal={() => setShowInviteModal(true)}
+              onToggleToFutureMode={() => setDashboardMode('future')}
             />
           </motion.div>
         ) : (
@@ -388,6 +261,7 @@ export default function Dashboard() {
               currentUser={currentUser}
               pendingInvitations={pendingInvitations}
               onShowInviteModal={() => setShowInviteModal(true)}
+              onToggleToPresentMode={() => setDashboardMode('present')}
             />
           </motion.div>
         )}
