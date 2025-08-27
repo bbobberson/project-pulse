@@ -341,51 +341,199 @@ export default function Dashboard() {
   // 🌌 REVOLUTIONARY SPATIAL OVERVIEW MODE
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
-      {/* Onboarding Modal */}
-      {currentUser && (
+      {/* Onboarding Modal - DISABLED FOR TESTING */}
+      {false && currentUser && (
         <OnboardingModal userEmail={currentUser.email} />
       )}
       
-      {/* Cosmic Header */}
+      {/* 🚀 2035 FUTURISTIC HEADER */}
       <motion.div 
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-6 left-6 right-6 z-50"
       >
-        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl">
+        <div className="bg-white/3 backdrop-blur-3xl border border-white/5 rounded-3xl shadow-2xl">
           <div className="max-w-7xl mx-auto px-8 py-5">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-8">
-                <InfoWorksLogo width={120} height={36} />
-                <div className="h-6 w-px bg-white/20" />
-                <div>
-                  <h1 className="text-xl font-extralight text-white tracking-wide">Project Pulse</h1>
+                {/* 🔮 LIVING INFOWORKS LOGO - BASED ON REAL BRAND */}
+                <motion.div className="relative flex items-center">
+                  <svg width="120" height="36" viewBox="0 0 120 36" className="overflow-visible">
+                    <defs>
+                      <filter id="logoGlow">
+                        <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                    </defs>
+                    
+                    {/* InfoWorks Text - Futuristic Blue for Black Background */}
+                    <text 
+                      x="8" 
+                      y="24" 
+                      fontSize="18" 
+                      fill="#60a5fa" 
+                      className="font-semibold"
+                      style={{ fontFamily: "system-ui, -apple-system" }}
+                    >
+                      InfoWorks
+                    </text>
+                    
+                    {/* 💫 FUTURISTIC ANIMATED RING - Bright Blue */}
+                    <motion.circle
+                      cx="94"
+                      cy="18"
+                      r="12"
+                      stroke="#3b82f6"
+                      strokeWidth="2"
+                      fill="none"
+                      filter="url(#logoGlow)"
+                      animate={{
+                        strokeOpacity: [0.6, 1, 0.6],
+                        r: [11, 13, 11],
+                        rotate: 360
+                      }}
+                      transition={{
+                        strokeOpacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+                        r: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
+                        rotate: { duration: 12, repeat: Infinity, ease: "linear" }
+                      }}
+                    />
+                    
+                    {/* Inner pulsing core */}
+                    <motion.circle
+                      cx="94"
+                      cy="18"
+                      r="3"
+                      fill="#3b82f6"
+                      animate={{
+                        scale: [0.8, 1.2, 0.8],
+                        opacity: [0.6, 1, 0.6]
+                      }}
+                      transition={{
+                        duration: 1.8,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                    />
+                  </svg>
+                </motion.div>
+
+                <div className="h-6 w-px bg-white/10" />
+                
+                {/* 🌌 COSMIC PROJECT PULSE TITLE */}
+                <motion.div
+                  whileHover={{ 
+                    textShadow: "0 0 10px #4a90e2, 0 0 20px #4a90e2, 0 0 30px #4a90e2"
+                  }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <h1 
+                    className="text-2xl text-white tracking-wide"
+                    style={{
+                      fontFamily: "'Orbitron', sans-serif",
+                      color: '#d1e0ff',
+                      textShadow: '0 0 5px #2a4066',
+                      fontWeight: 400
+                    }}
+                  >
+                    Project Pulse
+                  </h1>
                   {currentUser && (
-                    <p className="text-white/40 text-xs font-light">{currentUser.full_name}</p>
+                    <p className="text-white/30 text-xs font-light mt-1">{currentUser.full_name}</p>
                   )}
-                </div>
+                </motion.div>
               </div>
+
+              {/* 🌠 METEOR-STYLE ACTION BUTTONS */}
               <div className="flex items-center space-x-4">
                 {currentUser?.role === 'admin' && (
                   <motion.button
-                    whileHover={{ scale: 1.05, y: -2 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ 
+                      scale: 1.02, 
+                      boxShadow: "0 0 20px rgba(74, 144, 226, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1)"
+                    }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => setShowInviteModal(true)}
-                    className="px-6 py-3 bg-white/10 text-white/80 font-light rounded-2xl hover:bg-white/20 transition-all duration-300 border border-white/10"
+                    className="relative px-6 py-3 text-white/80 font-light transition-all duration-300 overflow-hidden rounded-2xl border border-white/10"
+                    style={{
+                      background: "linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%)",
+                    }}
                   >
-                    Invite PM
+                    {/* Subtle meteor trail effect */}
+                    <motion.div
+                      className="absolute inset-0 opacity-0"
+                      whileHover={{ opacity: 0.1 }}
+                      style={{
+                        background: "linear-gradient(90deg, transparent 0%, rgba(74, 144, 226, 0.3) 50%, transparent 100%)",
+                      }}
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    />
+                    <span className="relative z-10">Invite PM</span>
                   </motion.button>
                 )}
+                
                 <motion.button
-                  whileHover={{ scale: 1.05, y: -2 }}
+                  whileHover={{ 
+                    scale: 1.05,
+                    boxShadow: "0 0 40px rgba(59, 130, 246, 0.6), 0 0 80px rgba(147, 51, 234, 0.4)"
+                  }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => router.push('/dashboard/new-project')}
-                  className="px-6 py-3 bg-white/20 text-white font-light rounded-2xl hover:bg-white/30 transition-all duration-300 border border-white/20"
+                  className="relative px-8 py-3 text-white font-medium transition-all duration-300 overflow-hidden rounded-2xl border border-blue-400/30"
+                  style={{
+                    background: "linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #06b6d4 100%)",
+                    boxShadow: "0 0 20px rgba(59, 130, 246, 0.3)"
+                  }}
                 >
-                  New Project
+                  {/* 🌟 ANIMATED STARFIELD BACKGROUND */}
+                  <div className="absolute inset-0">
+                    {[...Array(12)].map((_, i) => (
+                      <motion.div
+                        key={i}
+                        className="absolute w-0.5 h-0.5 bg-white rounded-full"
+                        animate={{
+                          x: ["-10px", "100%"],
+                          y: [0, -20, 0],
+                          opacity: [0, 1, 0],
+                          scale: [0.5, 1.5, 0.5]
+                        }}
+                        transition={{
+                          duration: 2 + (i * 0.2),
+                          repeat: Infinity,
+                          delay: i * 0.3,
+                          ease: "linear"
+                        }}
+                        style={{
+                          left: `${(i * 8) % 100}%`,
+                          top: `${20 + (i * 10) % 60}%`
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  {/* 🚀 ENERGY PULSE RINGS */}
+                  <motion.div
+                    className="absolute inset-0 rounded-2xl border-2 border-white/20"
+                    animate={{
+                      scale: [1, 1.1, 1],
+                      opacity: [0.5, 0, 0.5]
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeOut"
+                    }}
+                  />
+
+                  <span className="relative z-10 font-semibold tracking-wide">New Project</span>
                 </motion.button>
-                <SignOutButton className="px-6 py-3 text-white/60 hover:text-white/90 font-light transition-colors" />
+
+                <SignOutButton className="px-6 py-3 text-white/50 hover:text-white/80 font-light transition-colors rounded-2xl hover:bg-white/5" />
               </div>
             </div>
           </div>
@@ -397,12 +545,26 @@ export default function Dashboard() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 1.2, delay: 0.5 }}
-        className="text-center pt-32 pb-16 relative z-10"
+        className="text-center pt-40 pb-4 relative z-10"
       >
-        <h1 className="text-8xl md:text-9xl font-extralight text-white mb-8 leading-none tracking-tight">
+        <h1 
+          className="text-8xl md:text-9xl text-white mb-8 leading-none tracking-tight"
+          style={{
+            fontFamily: "'Orbitron', sans-serif",
+            fontWeight: 300,
+            textShadow: '0 0 20px rgba(255, 255, 255, 0.1)'
+          }}
+        >
           Your Universe
         </h1>
-        <p className="text-2xl md:text-3xl font-extralight text-white/60 max-w-3xl mx-auto">
+        <p 
+          className="text-2xl md:text-3xl text-white/60 max-w-3xl mx-auto"
+          style={{
+            fontFamily: "system-ui, -apple-system, 'Segoe UI', sans-serif",
+            fontWeight: 400,
+            letterSpacing: '0.025em'
+          }}
+        >
           {filteredProjects.length === 0 
             ? (projects.length === 0 ? "Ready to create your first constellation" : "No projects match your search criteria")
             : `${filteredProjects.length} project${filteredProjects.length !== 1 ? 's' : ''} orbiting in your space`
@@ -432,11 +594,12 @@ export default function Dashboard() {
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-light text-lg focus:outline-none focus:border-white/30 transition-all appearance-none cursor-pointer min-w-[200px]"
+                style={{ color: '#ffffff' }}
               >
-                <option value="all" className="bg-black">All Status</option>
-                <option value="on-track" className="bg-black">On Track</option>
-                <option value="at-risk" className="bg-black">At Risk</option>
-                <option value="off-track" className="bg-black">Off Track</option>
+                <option value="all" className="bg-black text-white">All Status</option>
+                <option value="on-track" className="bg-black text-white">On Track</option>
+                <option value="at-risk" className="bg-black text-white">At Risk</option>
+                <option value="off-track" className="bg-black text-white">Off Track</option>
               </select>
             </div>
           </div>
