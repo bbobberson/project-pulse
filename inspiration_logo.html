@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; height: 100vh; background: #0a0f1a; overflow: hidden; }
+    .header { position: relative; height: 100px; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(5px); display: flex; align-items: center; padding: 0 20px; border-radius: 0 0 10px 10px; }
+    #logo { position: relative; width: 300px; height: 80px; }
+    #project-title { margin-left: 20px; font-size: 1.8em; font-family: 'Orbitron', sans-serif; color: #d1e0ff; text-shadow: 0 0 5px #2a4066; transition: all 0.3s ease; }
+    .header:hover #project-title { text-shadow: 0 0 10px #4a90e2; }
+    .ring { stroke: #4a90e2; stroke-width: 1; fill: none; filter: url(#glow); }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <svg id="logo" viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+          <feMerge>
+            <feMergeNode in="coloredBlur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <text x="15" y="55" font-family="Arial" font-size="40" fill="#d1e0ff" filter="url(#glow)">Info</text>
+      <text x="80" y="55" font-family="Arial" font-size="40" fill="#4a90e2" filter="url(#glow)" id="wText">W</text>
+      <text x="115" y="55" font-family="Arial" font-size="40" fill="#d1e0ff" filter="url(#glow)">orks</text>
+      <circle class="ring" id="ring" />
+    </svg>
+    <div id="project-title">Project Pulse</div>
+  </div>
+  <script>
+    const svg = document.getElementById('logo');
+    const wText = document.getElementById('wText');
+    const ring = document.getElementById('ring');
+
+    function positionRing() {
+      const wRect = wText.getBoundingClientRect();
+      const svgRect = svg.getBoundingClientRect();
+      
+      // Convert to SVG coordinates
+      const svgPoint = svg.createSVGPoint();
+      svgPoint.x = wRect.left + (wRect.width / 2) - svgRect.left + 16; // Kept at ~94-95px
+      svgPoint.y = wRect.top + wRect.height - svgRect.top - (wRect.height / 2) + 9; // Kept at ~40px
+      
+      const point = svgPoint.matrixTransform(svg.getScreenCTM().inverse());
+      
+      console.log("W center (SVG): x=", point.x.toFixed(2), "y=", point.y.toFixed(2)); // Debug with precision
+      ring.setAttribute('cx', Math.round(point.x));
+      ring.setAttribute('cy', Math.round(point.y));
+      ring.setAttribute('r', 30); // 60px diameter
+      
+      // Ensure ring fits within viewBox
+      if (point.y - 30 < 0) ring.setAttribute('cy', 30); // Cap if too high
+      if (point.y + 30 > 80) ring.setAttribute('cy', 50); // Cap if too low
+    }
+
+    window.addEventListener('load', positionRing);
+    window.addEventListener('resize', positionRing);
+
+    // Add pulsing glow with color shift
+    const ringAnim = document.createElementNS("http://www.w3.org/2000/svg", "animate");
+    ringAnim.setAttribute("attributeName", "stroke");
+    ringAnim.setAttribute("values", "#4a90e2;#2ecc71;#4a90e2");
+    ringAnim.setAttribute("dur", "4s");
+    ringAnim.setAttribute("repeatCount", "indefinite");
+    ring.appendChild(ringAnim);
+
+    const scaleAnim = document.createElementNS("http://www.w3.org/2000/svg", "animateTransform");
+    scaleAnim.setAttribute("attributeName", "transform");
+    scaleAnim.setAttribute("type", "scale");
+    scaleAnim.setAttribute("values", "1;1.02;1");
+    scaleAnim.setAttribute("dur", "4s");
+    scaleAnim.setAttribute("repeatCount", "indefinite");
+    ring.appendChild(scaleAnim);
+  </script>
+</body>
+</html>
