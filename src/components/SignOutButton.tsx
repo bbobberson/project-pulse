@@ -13,12 +13,13 @@ export function SignOutButton({ className, children }: SignOutButtonProps) {
 
   const handleLogout = async () => {
     try {
-      console.log('Logging out...'); // Debug log
+      // Redirect immediately to prevent flash, then sign out
+      router.replace('/auth/login');
       await supabase.auth.signOut();
-      console.log('Logout successful, redirecting...'); // Debug log
-      router.push('/');
     } catch (error) {
-      console.error('Logout error:', error); // Debug log
+      console.error('Logout error:', error);
+      // Still redirect on error
+      router.replace('/auth/login');
     }
   };
 

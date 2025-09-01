@@ -93,11 +93,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate invitation link using Supabase admin
+    // Use request origin for dynamic port support
+    const requestUrl = new URL(request.url)
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${requestUrl.protocol}//${requestUrl.host}`
+    
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
       options: {
-        redirectTo: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/auth/signup`
+        redirectTo: `${baseUrl}/auth/signup`
       }
     })
 

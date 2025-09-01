@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 24" width="48" height="24">
+<style>
+.st0{fill:#4A90E2;}
+.st1{stroke:#6BB6FF; stroke-width:1.5; fill:none;}
+</style>
+<!-- Simple "i" -->
+<rect class="st0" x="8" y="6" width="3" height="2" rx="1.5"/>
+<rect class="st0" x="8" y="10" width="3" height="8" rx="1.5"/>
+<!-- Pulse wave extending right -->
+<path class="st1" d="M15,14 Q18,11 21,14 T27,14 Q30,12 33,14 Q36,16 39,14"/>
+</svg>

@@ -172,7 +172,7 @@ export default function ClientAccessPage() {
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Project Not Found</h1>
           <button 
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="px-4 py-2 btn-primary"
           >
             Back to Dashboard
           </button>
@@ -197,9 +197,12 @@ export default function ClientAccessPage() {
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-300 rounded-lg"
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
               >
-                Back to Dashboard
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Dashboard
               </button>
               <SignOutButton className="text-gray-600 hover:text-gray-900 px-4 py-2 border border-gray-300 rounded-lg" />
             </div>
@@ -236,7 +239,7 @@ export default function ClientAccessPage() {
                 <select
                   value={selectedClientEmail}
                   onChange={(e) => setSelectedClientEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-brand text-gray-900"
                 >
                   <option value="">Choose a client user...</option>
                   {clientUsers.map((user) => (
@@ -253,7 +256,7 @@ export default function ClientAccessPage() {
               <select
                 value={newTokenDays}
                 onChange={(e) => setNewTokenDays(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-brand text-gray-900"
               >
                 <option value={7}>7 days</option>
                 <option value={14}>14 days</option>

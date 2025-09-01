@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 24" width="64" height="24">
+<style>
+.iw-blue{fill:#003399;}
+.iw-gray{fill:#231F20;}
+.pulse-line{stroke:#003399; stroke-width:2; fill:none;}
+</style>
+<!-- Clean "P" letterform -->
+<rect class="iw-blue" x="6" y="6" width="2.5" height="12"/>
+<rect class="iw-blue" x="6" y="6" width="8" height="2.5"/>
+<rect class="iw-blue" x="6" y="10.75" width="6" height="2.5"/>
+<rect class="iw-blue" x="12" y="8.5" width="2.5" height="2.25"/>
+<!-- Tesla-inspired pulse wave -->
+<path class="pulse-line" d="M20,12 L24,12 L26,8 L28,16 L30,12 L34,12 M36,12 L40,12 L42,8 L44,16 L46,12 L50,12"/>
+<!-- Subtle connection dot -->
+<circle class="iw-blue" cx="18" cy="12" r="1"/>
+</svg>

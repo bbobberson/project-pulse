@@ -2,13 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase-browser'
+import InfoWorksLogo from '@/components/InfoWorksLogo'
 
 interface Project {
   id: string
   name: string
   client_name: string
   overall_status: string
+  start_date: string
 }
 
 interface RoadmapTask {
@@ -55,7 +58,7 @@ export default function UpdatePulse() {
         // Fetch project
         const { data: projectData, error: projectError } = await supabase
           .from('projects')
-          .select('id, name, client_name, overall_status')
+          .select('id, name, client_name, overall_status, start_date')
           .eq('id', projectId)
           .single()
         
@@ -68,9 +71,12 @@ export default function UpdatePulse() {
         setProject(projectData)
         setOverallStatus(projectData.overall_status || 'on-track')
 
-        // Calculate current week (simplified - just use week 1 for now)
-        // TODO: Calculate based on project start date
-        const weekToShow = 1
+        // Calculate current week based on project start date
+        const projectStartDate = new Date(projectData.start_date)
+        const today = new Date()
+        const timeDiff = today.getTime() - projectStartDate.getTime()
+        const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24))
+        const weekToShow = Math.max(1, Math.ceil(daysDiff / 7))
         setCurrentWeek(weekToShow)
 
         // Fetch current week's tasks
@@ -137,6 +143,32 @@ export default function UpdatePulse() {
         return 'bg-gray-100 text-gray-800 border-gray-300'
       default:
         return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+    }
+  }
+
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'on-track':
+        return 'bg-emerald-500 shadow-emerald-200 shadow-lg'
+      case 'at-risk':
+        return 'bg-amber-500 shadow-amber-200 shadow-lg'
+      case 'off-track':
+        return 'bg-rose-500 shadow-rose-200 shadow-lg'
+      default:
+        return 'bg-gray-900'
+    }
+  }
+
+  const getStatusBorderClass = (status: string) => {
+    switch (status) {
+      case 'on-track':
+        return 'border-emerald-300 bg-emerald-50'
+      case 'at-risk':
+        return 'border-amber-300 bg-amber-50'
+      case 'off-track':
+        return 'border-rose-300 bg-rose-50'
+      default:
+        return 'border-gray-300 bg-gray-50'
     }
   }
 
@@ -209,43 +241,18 @@ export default function UpdatePulse() {
         executive_summary: executiveSummary
       }
 
-      // Check if weekly snapshot already exists for this week
-      const { data: existingSnapshot } = await supabase
+      // Always create new snapshot for each pulse update
+      const { error: snapshotError } = await supabase
         .from('weekly_snapshots')
-        .select('id')
-        .eq('project_id', projectId)
-        .eq('week_number', currentWeek)
-        .single()
-
-      let snapshotError = null
-
-      if (existingSnapshot) {
-        // Update existing snapshot
-        const { error } = await supabase
-          .from('weekly_snapshots')
-          .update({
-            tasks_data: taskSummary,
-            overall_status: overallStatus,
-            status: overallStatus,
-            created_by: 'PM User'
-          })
-          .eq('id', existingSnapshot.id)
-        snapshotError = error
-      } else {
-        // Create new snapshot
-        const { error } = await supabase
-          .from('weekly_snapshots')
-          .insert([{
-            project_id: projectId,
-            week_number: currentWeek,
-            week_start_date: new Date().toISOString().split('T')[0],
-            tasks_data: taskSummary,
-            overall_status: overallStatus,
-            status: overallStatus,
-            created_by: 'PM User'
-          }])
-        snapshotError = error
-      }
+        .insert([{
+          project_id: projectId,
+          week_number: currentWeek,
+          week_start_date: new Date().toISOString().split('T')[0],
+          tasks_data: taskSummary,
+          overall_status: overallStatus,
+          status: overallStatus,
+          created_by: 'PM User'
+        }])
 
       if (snapshotError) {
         console.error('Error creating snapshot:', snapshotError)
@@ -277,7 +284,7 @@ export default function UpdatePulse() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Project not found</h2>
           <button 
             onClick={() => router.push('/dashboard')}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline cursor-pointer"
           >
             ← Back to Dashboard
           </button>
@@ -287,20 +294,31 @@ export default function UpdatePulse() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#fafafa' }}>
-      {/* Clean Header */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-8">
-          <div className="flex items-center py-8">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-gray-400 hover:text-gray-600 mr-8 font-medium transition-colors"
-            >
-              ← Dashboard
-            </button>
-            <div>
-              <h1 className="text-3xl font-light text-gray-900">Update Pulse</h1>
-              <p className="text-gray-500 mt-1">{project.name} • Week {currentWeek}</p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-6">
+              <motion.button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Dashboard
+              </motion.button>
+              <div className="h-6 w-px bg-gray-300" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Update Pulse</h1>
+                <p className="text-gray-600 mt-1">{project.name} • Week {currentWeek}</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <InfoWorksLogo width={120} height={36} />
             </div>
           </div>
         </div>
@@ -327,14 +345,14 @@ export default function UpdatePulse() {
                     onChange={(e) => setOverallStatus(e.target.value)}
                     className="sr-only"
                   />
-                  <div className={`p-4 rounded-2xl border-2 transition-all text-center ${
+                  <div className={`p-4 rounded-2xl border-2 transition-all duration-200 text-center ${
                     overallStatus === status.value
-                      ? 'border-gray-900 bg-gray-50'
+                      ? getStatusBorderClass(status.value)
                       : 'border-gray-200 hover:border-gray-300'
                   }`}>
-                    <div className={`w-3 h-3 rounded-full mx-auto mb-3 ${
+                    <div className={`w-3 h-3 rounded-full mx-auto mb-3 transition-all duration-200 ${
                       overallStatus === status.value
-                        ? 'bg-gray-900'
+                        ? getStatusColorClass(status.value)
                         : 'bg-gray-300'
                     }`}></div>
                     <span className="text-sm font-medium text-gray-900">{status.label}</span>
@@ -365,7 +383,7 @@ export default function UpdatePulse() {
               <button
                 type="button"
                 onClick={() => router.push(`/dashboard/${projectId}/roadmap`)}
-                className="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium transition-colors rounded-xl"
+                className="px-4 py-2 text-gray-500 hover:text-gray-700 font-medium transition-colors rounded-xl cursor-pointer"
               >
                 Manage Roadmap
               </button>
@@ -378,7 +396,7 @@ export default function UpdatePulse() {
                 <button
                   type="button"
                   onClick={() => router.push(`/dashboard/${projectId}/roadmap`)}
-                  className="px-6 py-3 bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium rounded-2xl transition-colors"
+                  className="px-6 py-3 bg-gray-100 text-gray-600 hover:bg-gray-200 font-medium rounded-2xl transition-colors cursor-pointer"
                 >
                   Manage Roadmap
                 </button>
@@ -465,7 +483,7 @@ export default function UpdatePulse() {
             <button
               type="button"
               onClick={() => router.push('/dashboard')}
-              className="px-8 py-4 text-gray-500 hover:text-gray-700 font-medium transition-colors rounded-2xl"
+              className="px-8 py-4 text-gray-500 hover:text-gray-700 font-medium transition-colors rounded-2xl cursor-pointer"
             >
               Cancel
             </button>
@@ -473,7 +491,7 @@ export default function UpdatePulse() {
               type="submit"
               disabled={loading}
               style={{ backgroundColor: '#1C2B45' }}
-              className="px-8 py-4 text-white font-medium rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="px-8 py-4 text-white font-medium rounded-2xl hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
             >
               {loading ? 'Publishing...' : 'Publish Update'}
             </button>

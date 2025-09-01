@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase-browser'
+import InfoWorksLogo from '@/components/InfoWorksLogo'
+import ConfirmDialog from '@/components/ConfirmDialog'
+import { useFormValidation } from '@/hooks/useFormValidation'
 
 interface ClientUser {
   email: string
@@ -41,12 +45,38 @@ export default function NewProject() {
   const [teamMemberInput, setTeamMemberInput] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([])
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    dangerous: false,
+    onConfirm: () => {},
+    onCancel: () => {}
+  })
+
+  // Form validation rules
+  const validationRules = {
+    name: { required: true, minLength: 2, maxLength: 100 },
+    client_name: { required: true, minLength: 2, maxLength: 100 },
+    start_date: { required: true },
+    end_date: { required: true, dateAfter: 'start_date' },
+    pm_assigned: { required: true },
+    onedrive_link: { url: true }
+  }
+
+  const { errors, validateAll, markFieldTouched, getFieldError } = useFormValidation(validationRules, formData)
 
   // Fetch PM users and current user on component mount
   useEffect(() => {
     fetchPmUsers()
     fetchCurrentUser()
     fetchPreviousTeamMembers()
+  }, [])
+
+  // Set page title
+  useEffect(() => {
+    document.title = "New Project • Project Pulse by InfoWorks"
   }, [])
 
   const fetchPmUsers = async () => {
@@ -160,11 +190,31 @@ export default function NewProject() {
   }
   
   const removeClientUser = (index: number) => {
-    setClientUsers(prev => prev.filter((_, i) => i !== index))
+    const userToRemove = clientUsers[index]
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Remove Client User',
+      message: `Are you sure you want to remove "${userToRemove.name}" (${userToRemove.email}) from this project?`,
+      confirmText: 'Yes, Remove',
+      dangerous: true,
+      onConfirm: () => {
+        setClientUsers(prev => prev.filter((_, i) => i !== index))
+        setConfirmDialog({ ...confirmDialog, isOpen: false })
+      },
+      onCancel: () => setConfirmDialog({ ...confirmDialog, isOpen: false })
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Validate form
+    if (!validateAll()) {
+      // Mark all fields as touched to show errors
+      Object.keys(validationRules).forEach(field => markFieldTouched(field))
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -246,26 +296,43 @@ export default function NewProject() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center py-4">
-            <button
-              onClick={() => router.push('/dashboard')}
-              className="text-gray-600 hover:text-gray-900 mr-4"
-            >
-              ← Back to Dashboard
-            </button>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create New Project</h1>
-              <p className="text-gray-600">Set up a new project for client status tracking</p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between py-6">
+            <div className="flex items-center space-x-6">
+              <motion.button
+                onClick={() => router.push('/dashboard')}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Dashboard
+              </motion.button>
+              <div className="h-6 w-px bg-gray-300" />
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
+                <p className="text-gray-600 mt-1">Set up a new project for seamless client collaboration</p>
+              </div>
+            </div>
+            <div className="flex items-center">
+              <InfoWorksLogo width={120} height={36} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <motion.form 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          onSubmit={handleSubmit} 
+          className="bg-white rounded-xl shadow-lg border border-gray-100 p-8"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Project Name */}
             <div className="md:col-span-2">
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -278,9 +345,15 @@ export default function NewProject() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                onBlur={() => markFieldTouched('name')}
+                className={`w-full px-4 py-3 border rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all ${
+                  getFieldError('name') ? 'border-red-500' : 'border-gray-300'
+                }`}
                 placeholder="e.g., Website Redesign Project"
               />
+              {getFieldError('name') && (
+                <p className="mt-1 text-sm text-red-600">{getFieldError('name')}</p>
+              )}
             </div>
 
             {/* Client Name */}
@@ -295,7 +368,7 @@ export default function NewProject() {
                 required
                 value={formData.client_name}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                 placeholder="e.g., Acme Corporation"
               />
             </div>
@@ -315,7 +388,7 @@ export default function NewProject() {
                   setCurrentUser(selectedPM || null)
                   handleChange(e)
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 cursor-pointer"
               >
                 <option value="">Select Assigned PM</option>
                 {pmUsers.map((pm) => (
@@ -338,7 +411,7 @@ export default function NewProject() {
                 required
                 value={formData.start_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
               />
             </div>
 
@@ -354,7 +427,7 @@ export default function NewProject() {
                 required
                 value={formData.end_date}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
               />
             </div>
 
@@ -370,7 +443,7 @@ export default function NewProject() {
                   name="team_members"
                   value={formData.team_members}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                   placeholder="e.g., John Smith, Jane Doe, Mike Wilson (comma separated)"
                 />
                 <div className="mt-2">
@@ -389,7 +462,7 @@ export default function NewProject() {
                       // Delay hiding suggestions to allow clicking
                       setTimeout(() => setShowSuggestions(false), 200)
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 text-sm"
                   />
                   {showSuggestions && filteredSuggestions.length > 0 && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-40 overflow-y-auto">
@@ -421,7 +494,7 @@ export default function NewProject() {
                 name="onedrive_link"
                 value={formData.onedrive_link}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                 placeholder="e.g., https://company-my.sharepoint.com/..."
               />
             </div>
@@ -437,7 +510,7 @@ export default function NewProject() {
                 rows={3}
                 value={formData.overall_summary}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                 placeholder="Brief description of the project goals and scope..."
               />
             </div>
@@ -460,7 +533,7 @@ export default function NewProject() {
                       placeholder="Email address"
                       value={newUser.email}
                       onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                     />
                   </div>
                   <div>
@@ -469,7 +542,7 @@ export default function NewProject() {
                       placeholder="Full name"
                       value={newUser.name}
                       onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500 transition-all"
                     />
                   </div>
                   <div>
@@ -477,7 +550,7 @@ export default function NewProject() {
                       type="button"
                       onClick={addClientUser}
                       disabled={!newUser.email.trim()}
-                      className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full px-4 py-3 btn-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer font-medium"
                     >
                       Add User
                     </button>
@@ -510,14 +583,17 @@ export default function NewProject() {
                             {user.name && <p className="text-sm text-gray-500">{user.email}</p>}
                           </div>
                           {user.email_notifications && (
-                            <span className="text-xs text-green-600">📧 Notifications</span>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
+                              Notifications
+                            </span>
                           )}
                         </div>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeClientUser(index)}
-                        className="text-red-600 hover:text-red-800 text-sm"
+                        className="text-red-600 hover:text-red-800 text-sm cursor-pointer"
                       >
                         Remove
                       </button>
@@ -531,23 +607,38 @@ export default function NewProject() {
 
         {/* Submit Buttons */}
         <div className="flex justify-end space-x-4 mt-8 pt-6 border-t border-gray-200">
-          <button
+          <motion.button
             type="button"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => router.push('/dashboard')}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer font-medium"
           >
             Cancel
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             type="submit"
             disabled={loading}
+            whileHover={!loading ? { scale: 1.02 } : {}}
+            whileTap={!loading ? { scale: 0.98 } : {}}
             style={{ backgroundColor: '#1C2B45' }}
-            className="px-6 py-2 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50"
+            className="px-6 py-3 text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer font-medium"
           >
             {loading ? 'Creating...' : 'Create Project'}
-          </button>
+          </motion.button>
         </div>
-        </form>
+        </motion.form>
+
+        {/* Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmText={confirmDialog.confirmText}
+          dangerous={confirmDialog.dangerous}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={confirmDialog.onCancel}
+        />
       </div>
     </div>
   )

@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { motion } from 'framer-motion'
 import { supabase } from '@/lib/supabase-browser'
+import InfoWorksLogo from '@/components/InfoWorksLogo'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import {
   DndContext,
   DragEndEvent,
@@ -81,7 +84,7 @@ function DraggableTaskTemplate({ template }: { template: TaskTemplate }) {
       style={style}
       {...attributes}
       {...listeners}
-      className="p-3 bg-white border border-gray-200 rounded-lg cursor-grab hover:bg-gray-50 hover:border-gray-300 transition-colors"
+      className="p-4 bg-white border border-gray-200 rounded-xl cursor-grab hover:bg-gray-50 hover:border-gray-300 transition-all hover:shadow-sm"
     >
       <div className="font-medium text-sm text-gray-900">{template.name}</div>
       <div className="text-xs text-gray-500 mt-1">{template.estimated_hours}h • {template.category}</div>
@@ -130,10 +133,10 @@ function WeekColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[300px] p-4 bg-gray-50 rounded-lg border-2 border-dashed transition-colors ${
+      className={`min-h-[300px] p-6 bg-gray-50 rounded-2xl border-2 border-dashed transition-all ${
         isOver 
-          ? 'border-blue-400 bg-blue-50' 
-          : 'border-gray-300'
+          ? 'border-blue-400 bg-blue-50 shadow-lg' 
+          : 'border-gray-300 hover:border-gray-400'
       }`}
     >
       <h3 className="font-semibold text-gray-900 mb-3">Week {weekNumber}</h3>
@@ -141,7 +144,7 @@ function WeekColumn({
         {tasks.map((task) => (
           <div
             key={task.id}
-            className={`p-3 bg-white rounded-lg border ${
+            className={`p-4 bg-white rounded-xl border shadow-sm transition-all hover:shadow-md ${
               task.is_milestone ? 'border-blue-300 bg-blue-50' : 'border-gray-200'
             }`}
           >
@@ -173,7 +176,7 @@ function WeekColumn({
               <select
                 value={task.status}
                 onChange={(e) => onUpdateTaskStatus(task.id, e.target.value)}
-                className={`text-xs px-2 py-1 rounded-full border-0 ${getStatusColor(task.status)}`}
+                className={`text-xs px-3 py-2 rounded-xl border-0 font-medium cursor-pointer transition-all hover:shadow-sm ${getStatusColor(task.status)}`}
               >
                 <option value="not-started">Not Started</option>
                 <option value="in-progress">In Progress</option>
@@ -212,6 +215,15 @@ export default function ProjectRoadmap() {
   const [draggedTemplate, setDraggedTemplate] = useState<TaskTemplate | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [confirmDialog, setConfirmDialog] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    confirmText: 'Confirm',
+    dangerous: false,
+    onConfirm: () => {},
+    onCancel: () => {}
+  })
 
   const sensors = useSensors(useSensor(PointerSensor))
 
@@ -338,22 +350,35 @@ export default function ProjectRoadmap() {
   }
 
   async function deleteTask(taskId: string) {
-    if (!confirm('Are you sure you want to delete this task?')) return
+    // Find the task to get its name
+    const task = roadmapTasks.find(t => t.id === taskId)
+    const taskName = task?.custom_task_name || task?.task_template?.name || 'this task'
 
-    try {
-      const { error } = await supabase
-        .from('project_roadmap')
-        .delete()
-        .eq('id', taskId)
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Task',
+      message: `Are you sure you want to delete "${taskName}"? This action cannot be undone.`,
+      confirmText: 'Yes, Delete',
+      dangerous: true,
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase
+            .from('project_roadmap')
+            .delete()
+            .eq('id', taskId)
 
-      if (error) {
-        console.error('Error deleting task:', error)
-      } else {
-        fetchRoadmapTasks()
-      }
-    } catch (err) {
-      console.error('Error:', err)
-    }
+          if (error) {
+            console.error('Error deleting task:', error)
+          } else {
+            fetchRoadmapTasks()
+          }
+        } catch (err) {
+          console.error('Error:', err)
+        }
+        setConfirmDialog({ ...confirmDialog, isOpen: false })
+      },
+      onCancel: () => setConfirmDialog({ ...confirmDialog, isOpen: false })
+    })
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -447,7 +472,7 @@ export default function ProjectRoadmap() {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Project not found</h2>
           <button 
             onClick={() => router.push('/dashboard')}
-            className="text-blue-600 hover:underline"
+            className="text-blue-600 hover:underline cursor-pointer"
           >
             ← Back to Dashboard
           </button>
@@ -462,30 +487,36 @@ export default function ProjectRoadmap() {
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between py-4">
-              <div className="flex items-center">
-                <button
+            <div className="flex items-center justify-between py-6">
+              <div className="flex items-center space-x-6">
+                <motion.button
                   onClick={() => router.push('/dashboard')}
-                  className="text-gray-600 hover:text-gray-900 mr-4"
+                  className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium cursor-pointer"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
-                  ← Back to Dashboard
-                </button>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Dashboard
+                </motion.button>
+                <div className="h-6 w-px bg-gray-300" />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Project Roadmap</h1>
-                  <p className="text-gray-600">{project.name} • {project.client_name}</p>
+                  <h1 className="text-3xl font-bold text-gray-900">Project Roadmap</h1>
+                  <p className="text-gray-600 mt-1">{project.name} • {project.client_name}</p>
                 </div>
               </div>
-              <div className="text-sm text-gray-600">
-                Drag tasks from library to timeline →
+              <div className="flex items-center">
+                <InfoWorksLogo width={120} height={36} />
               </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex h-[calc(100vh-120px)]">
+        <div className="flex h-[calc(100vh-140px)]">
           {/* Task Library Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 p-4 overflow-y-auto">
+          <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Library</h2>
             
             {/* Search Input */}
@@ -495,7 +526,7 @@ export default function ProjectRoadmap() {
                 placeholder="Search tasks..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500 text-sm"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 text-sm transition-all"
               />
             </div>
             
@@ -505,7 +536,7 @@ export default function ProjectRoadmap() {
                 <div key={category} className="mb-4">
                   <button
                     onClick={() => toggleCategory(category)}
-                    className="w-full flex items-center justify-between p-2 text-left hover:bg-gray-50 rounded-lg transition-colors"
+                    className="w-full flex items-center justify-between p-3 text-left hover:bg-gray-50 rounded-xl transition-all"
                   >
                     <h3 className="text-sm font-medium text-gray-700 uppercase tracking-wide">
                       {category} <span className="text-gray-500 font-normal">({templates.length})</span>
@@ -535,8 +566,13 @@ export default function ProjectRoadmap() {
           </div>
 
           {/* Timeline */}
-          <div className="flex-1 p-4 overflow-x-auto">
-            <div className="flex space-x-4 min-w-max">
+          <div className="flex-1 p-6 overflow-x-auto">
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 font-medium">
+                Drag tasks from library to timeline →
+              </p>
+            </div>
+            <div className="flex space-x-6 min-w-max">
               {weeks.map((weekNumber) => (
                 <div key={weekNumber} className="w-64 flex-shrink-0">
                   <SortableContext items={[`week-${weekNumber}`]} strategy={verticalListSortingStrategy}>
@@ -556,7 +592,7 @@ export default function ProjectRoadmap() {
         {/* Drag Overlay */}
         <DragOverlay>
           {draggedTemplate ? (
-            <div className="p-3 bg-white border border-gray-200 rounded-lg shadow-lg">
+            <div className="p-4 bg-white border border-gray-200 rounded-xl shadow-xl">
               <div className="font-medium text-sm text-gray-900">{draggedTemplate.name}</div>
               <div className="text-xs text-gray-500 mt-1">
                 {draggedTemplate.estimated_hours}h • {draggedTemplate.category}
@@ -564,6 +600,17 @@ export default function ProjectRoadmap() {
             </div>
           ) : null}
         </DragOverlay>
+
+        {/* Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={confirmDialog.isOpen}
+          title={confirmDialog.title}
+          message={confirmDialog.message}
+          confirmText={confirmDialog.confirmText}
+          dangerous={confirmDialog.dangerous}
+          onConfirm={confirmDialog.onConfirm}
+          onCancel={confirmDialog.onCancel}
+        />
       </div>
     </DndContext>
   )

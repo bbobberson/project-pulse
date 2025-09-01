@@ -272,7 +272,7 @@ export default function FutureModeUniverse({
               <motion.button 
                 whileHover={{ scale: 1.05, y: -5 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => router.push(`/dashboard/${selectedProject.id}/edit`)}
+                onClick={() => router.push(`/dashboard/${selectedProject.id}`)}
                 className="px-8 py-4 bg-white/10 backdrop-blur-xl text-white rounded-2xl border border-white/20 hover:bg-white/20 transition-all"
               >
                 Settings
@@ -303,7 +303,7 @@ export default function FutureModeUniverse({
           <div className="max-w-7xl mx-auto px-8 py-5">
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-8">
-                {/* 🔮 LIVING INFOWORKS LOGO - CLICKABLE EASTER EGG TOGGLE */}
+                {/* 🌌 FUTURISTIC INFOWORKS LOGO - CLICKABLE EASTER EGG TOGGLE */}
                 <motion.div 
                   className="relative flex items-center cursor-pointer"
                   onClick={onToggleToPresentMode}
@@ -311,66 +311,70 @@ export default function FutureModeUniverse({
                   whileTap={{ scale: 0.95 }}
                   title="Click to toggle to Present Mode"
                 >
-                  <svg width="120" height="36" viewBox="0 0 120 36" className="overflow-visible">
+                  <svg width="140" height="40" viewBox="0 0 140 40" className="overflow-visible">
                     <defs>
-                      <filter id="logoGlow">
-                        <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+                      {/* Enhanced glow filters */}
+                      <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="blur" />
                         <feMerge>
-                          <feMergeNode in="coloredBlur"/>
-                          <feMergeNode in="SourceGraphic"/>
+                          <feMergeNode in="blur" />
+                          <feMergeNode in="SourceGraphic" />
                         </feMerge>
                       </filter>
+                      <filter id="neonGlow" x="-70%" y="-70%" width="240%" height="240%">
+                        <feGaussianBlur stdDeviation="3" result="b1" />
+                        <feGaussianBlur stdDeviation="6" in="SourceGraphic" result="b2" />
+                        <feMerge>
+                          <feMergeNode in="b1" />
+                          <feMergeNode in="b2" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                      
+                      {/* Ring gradient */}
+                      <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#00B2FF" />
+                        <stop offset="50%" stopColor="#0090FF" />
+                        <stop offset="100%" stopColor="#0066FF" />
+                      </linearGradient>
+                      
+                      {/* Core gradient */}
+                      <radialGradient id="coreGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#00B2FF" />
+                        <stop offset="60%" stopColor="#0090FF" />
+                        <stop offset="100%" stopColor="#003CFF" />
+                      </radialGradient>
                     </defs>
                     
-                    {/* InfoWorks Text - Futuristic Blue for Black Background */}
-                    <text 
-                      x="8" 
-                      y="24" 
-                      fontSize="18" 
-                      fill="#60a5fa" 
-                      className="font-semibold"
-                      style={{ fontFamily: "system-ui, -apple-system" }}
+                    {/* Stationary glowing ring with rotating dash pattern - positioned around "W" (drawn first, behind text) */}
+                    <motion.circle
+                      cx="52"
+                      cy="20"
+                      r="18"
+                      fill="none"
+                      stroke="url(#ringGrad)"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="75 25"
+                      strokeDashoffset={0}
+                      filter="url(#neonGlow)"
+                      animate={{ strokeDashoffset: [0, -100] }}
+                      transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                    />
+                    
+                    {/* InfoWorks Text - Enhanced Typography (drawn second, in front of ring) */}
+                    <text
+                      x="8"
+                      y="26"
+                      fontFamily="Inter, ui-sans-serif, system-ui, -apple-system"
+                      fontWeight="700"
+                      fontSize="18"
+                      fill="#FFFFFF"
+                      filter="url(#softGlow)"
+                      style={{ letterSpacing: "0.5px" }}
                     >
                       InfoWorks
                     </text>
-                    
-                    {/* 💫 FUTURISTIC ANIMATED RING - Bright Blue */}
-                    <motion.circle
-                      cx="94"
-                      cy="18"
-                      r="12"
-                      stroke="#3b82f6"
-                      strokeWidth="2"
-                      fill="none"
-                      filter="url(#logoGlow)"
-                      animate={{
-                        strokeOpacity: [0.6, 1, 0.6],
-                        r: [11, 13, 11],
-                        rotate: 360
-                      }}
-                      transition={{
-                        strokeOpacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
-                        r: { duration: 2.5, repeat: Infinity, ease: "easeInOut" },
-                        rotate: { duration: 12, repeat: Infinity, ease: "linear" }
-                      }}
-                    />
-                    
-                    {/* Inner pulsing core */}
-                    <motion.circle
-                      cx="94"
-                      cy="18"
-                      r="3"
-                      fill="#3b82f6"
-                      animate={{
-                        scale: [0.8, 1.2, 0.8],
-                        opacity: [0.6, 1, 0.6]
-                      }}
-                      transition={{
-                        duration: 1.8,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                    />
                   </svg>
                 </motion.div>
 
@@ -635,7 +639,7 @@ export default function FutureModeUniverse({
                       stiffness: 50,
                       damping: 20
                     }}
-                    onClick={() => enterImmersiveMode(project)}
+                    onClick={() => router.push(`/dashboard/${project.id}`)}
                     onHoverStart={() => setHoveredProject(project.id)}
                     onHoverEnd={() => setHoveredProject(null)}
                   >
@@ -741,8 +745,23 @@ export default function FutureModeUniverse({
                             {project.overall_status.replace('-', ' ')}
                           </div>
                           
-                          {/* Hover hint only on larger cards */}
-                          {cardSize.width > 300 && proximity.magneticPull > 0.4 && (
+                          {/* Update Pulse Quick Link */}
+                          {cardSize.width > 300 && (
+                            <motion.button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/dashboard/${project.id}/update-pulse`)
+                              }}
+                              className="px-3 py-1 bg-white/10 backdrop-blur-xl text-white/80 text-xs rounded-full border border-white/20 hover:bg-white/20 hover:text-white transition-all"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              Update Pulse
+                            </motion.button>
+                          )}
+                          
+                          {/* Hover hint only on larger cards when no Update Pulse button */}
+                          {cardSize.width <= 300 && proximity.magneticPull > 0.4 && (
                             <motion.div 
                               initial={{ opacity: 0 }}
                               animate={{ opacity: 1 }}

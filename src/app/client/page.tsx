@@ -54,6 +54,8 @@ function ClientPortalContent() {
   const [clientName, setClientName] = useState('')
   const [tokenData, setTokenData] = useState<{token: string, projectId: string, clientEmail: string} | null>(null)
   const [authError, setAuthError] = useState('')
+  const [expandedUpdateId, setExpandedUpdateId] = useState<string | null>(null)
+  const [currentReportIndex, setCurrentReportIndex] = useState(0)
 
   useEffect(() => {
     validateTokenAndFetchProjects()
@@ -64,6 +66,11 @@ function ClientPortalContent() {
       fetchSnapshots(selectedProject.id)
     }
   }, [selectedProject])
+
+  // Set page title
+  useEffect(() => {
+    document.title = "Client Portal • Project Pulse by InfoWorks"
+  }, [])
 
   async function validateTokenAndFetchProjects() {
     try {
@@ -131,23 +138,9 @@ function ClientPortalContent() {
       if (error) {
         console.error('Error fetching snapshots:', error)
       } else {
-        // Remove duplicates - keep only the latest snapshot per week
-        const uniqueSnapshots = (data || []).reduce((acc: any[], snapshot) => {
-          const weekKey = snapshot.week_number || snapshot.week_start_date
-          const existingWeek = acc.find(s => 
-            (s.week_number && s.week_number === snapshot.week_number) ||
-            (s.week_start_date === snapshot.week_start_date)
-          )
-          if (!existingWeek) {
-            acc.push(snapshot)
-          }
-          return acc
-        }, [])
-        
-        // Sort by most recent and limit to last 5 updates
-        const recentSnapshots = uniqueSnapshots
+        // Sort by most recent - show all updates (no deduplication for client portal)
+        const recentSnapshots = (data || [])
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .slice(0, 5)
         
         setSnapshots(recentSnapshots)
       }
@@ -177,6 +170,22 @@ function ClientPortalContent() {
       month: 'long',
       day: 'numeric'
     })
+  }
+
+  const formatDateTime = (dateString: string) => {
+    const date = new Date(dateString)
+    return {
+      date: date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      }),
+      time: date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+      })
+    }
   }
 
   // Filter projects based on search and status
@@ -346,33 +355,67 @@ function ClientPortalContent() {
       {selectedProject && (
         <ClientWelcomeModal 
           projectName={selectedProject.name}
-          clientName={selectedProject.client_name}
+          clientName="Bill Butler"
           pmName={selectedProject.pm_assigned}
         />
       )}
       
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-4">
-              <InfoWorksLogo width={100} height={32} />
-              <div className="border-l border-gray-300 pl-4">
-                <h1 className="text-2xl font-bold text-gray-900">Project Pulse</h1>
-                <p className="text-gray-600">Client Portal</p>
-              </div>
-              {clientName && (
-                <div className="border-l border-gray-300 pl-4">
-                  <p className="text-sm font-medium text-gray-900">Welcome, {clientName}!</p>
-                  <p className="text-xs text-gray-500">Access your project updates below</p>
-                </div>
+      {/* Tesla-Inspired Clean Header */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-8">
+          <div className="flex justify-between items-center py-8">
+            <div className="flex items-center space-x-8">
+              <InfoWorksLogo width={120} height={36} />
+              {selectedProject && (
+                <>
+                  <div className="w-px h-8 bg-gray-300"></div>
+                  <div>
+                    <h1 className="text-2xl font-semibold text-gray-900">{selectedProject.name}</h1>
+                    <p className="text-gray-500 text-sm mt-1">Welcome, Bill Butler</p>
+                  </div>
+                </>
               )}
+            </div>
+            <div className="flex items-center space-x-4">
+              {selectedProject && (
+                <>
+                  <button
+                    onClick={() => router.push(`/client/${selectedProject.id}/roadmap?token=${tokenData?.token}`)}
+                    className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m2-6h10a2 2 0 002-2V7a2 2 0 00-2-2H9z" />
+                    </svg>
+                    Roadmap
+                  </button>
+
+                  {selectedProject.onedrive_link && (
+                    <a
+                      href={selectedProject.onedrive_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h2a2 2 0 012 2v2H8V5z" />
+                      </svg>
+                      Files
+                    </a>
+                  )}
+                </>
+              )}
+              
+              <div className="text-right border-l border-gray-300 pl-4">
+                <p className="text-sm text-gray-500">Project Manager</p>
+                <p className="font-medium text-gray-900">{selectedProject?.pm_assigned}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-8 py-12">
         {/* Project Selector with Search and Filters */}
         {shouldShowProjectSelector && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -389,7 +432,7 @@ function ClientPortalContent() {
                   placeholder="Search by project name, client, or PM..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-brand text-gray-900 placeholder-gray-500"
                 />
               </div>
               
@@ -401,7 +444,7 @@ function ClientPortalContent() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus-brand text-gray-900"
                 >
                   <option value="active">Active Projects</option>
                   <option value="completed">Completed Projects</option>
@@ -488,238 +531,329 @@ function ClientPortalContent() {
         )}
 
         {selectedProject && (
-          <div className="space-y-6">
-            {/* Project Details */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{selectedProject.name}</h2>
-                  <p className="text-gray-600">Client: {selectedProject.client_name}</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => router.push(`/client/${selectedProject.id}/roadmap?token=${tokenData?.token}`)}
-                    style={{ backgroundColor: '#1C2B45' }}
-                    className="text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity text-sm font-medium"
-                  >
-                    📋 View Project Roadmap
-                  </button>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedProject.overall_status)}`}>
-                    {selectedProject.overall_status}
-                  </span>
-                </div>
-              </div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2 space-y-8">
+              {/* Current Report with Tesla Navigation */}
+              {!snapshotsLoading && snapshots.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-8">
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                        {/* Previous Report Button */}
+                        <button
+                          onClick={() => setCurrentReportIndex(Math.min(currentReportIndex + 1, snapshots.length - 1))}
+                          disabled={currentReportIndex >= snapshots.length - 1}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                          </svg>
+                        </button>
+                        
+                        <div>
+                          <h2 className="text-2xl font-semibold text-gray-900">
+                            {currentReportIndex === 0 ? 'Latest Update' : 'Project Update'}
+                          </h2>
+                          <div className="flex items-center space-x-3 mt-1">
+                            <p className="text-gray-600 font-medium">{formatDateTime(snapshots[currentReportIndex].created_at).date}</p>
+                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                            <p className="text-gray-500 text-sm">{formatDateTime(snapshots[currentReportIndex].created_at).time}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Next Report Button */}
+                        <button
+                          onClick={() => setCurrentReportIndex(Math.max(currentReportIndex - 1, 0))}
+                          disabled={currentReportIndex <= 0}
+                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center space-x-3">
+                        {currentReportIndex === 0 && (
+                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full">
+                            Most Recent
+                          </span>
+                        )}
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(snapshots[currentReportIndex].overall_status)}`}>
+                          {snapshots[currentReportIndex].overall_status}
+                        </span>
+                        
+                        {/* Report Counter */}
+                        {snapshots.length > 1 && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full">
+                            {currentReportIndex + 1} of {snapshots.length}
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-              {selectedProject.overall_summary && (
-                <p className="text-gray-700 mb-4">{selectedProject.overall_summary}</p>
+                    {snapshots[currentReportIndex].tasks_data && (
+                      <div className="space-y-6">
+                        {/* Executive Summary */}
+                        {snapshots[currentReportIndex].tasks_data.executive_summary && (
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-3">Executive Summary</h3>
+                            <p className="text-gray-700 text-base leading-relaxed">{snapshots[currentReportIndex].tasks_data.executive_summary}</p>
+                          </div>
+                        )}
+
+                        {/* Progress Overview */}
+                        {(snapshots[currentReportIndex].tasks_data.completed_tasks?.length > 0 || 
+                          snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length > 0 || 
+                          snapshots[currentReportIndex].tasks_data.blocked_tasks?.length > 0) && (
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-900 mb-4">Progress This Week</h3>
+                            
+                            <div className="grid grid-cols-3 gap-4 mb-6">
+                              <div className="text-center p-4 bg-green-50 rounded-xl border border-green-100">
+                                <div className="text-2xl font-bold text-green-800">{snapshots[currentReportIndex].tasks_data.completed_tasks?.length || 0}</div>
+                                <div className="text-sm font-medium text-green-700">Completed</div>
+                              </div>
+                              <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="text-2xl font-bold text-blue-800">{snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length || 0}</div>
+                                <div className="text-sm font-medium text-blue-700">In Progress</div>
+                              </div>
+                              <div className="text-center p-4 bg-red-50 rounded-xl border border-red-100">
+                                <div className="text-2xl font-bold text-red-800">{snapshots[currentReportIndex].tasks_data.blocked_tasks?.length || 0}</div>
+                                <div className="text-sm font-medium text-red-700">Blocked</div>
+                              </div>
+                            </div>
+
+                            {/* Task Details */}
+                            {snapshots[currentReportIndex].tasks_data.completed_tasks?.length > 0 && (
+                              <div className="mb-4">
+                                <h4 className="font-medium text-green-800 mb-3 flex items-center">
+                                  <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
+                                  Completed This Week
+                                </h4>
+                                <div className="space-y-2">
+                                  {snapshots[currentReportIndex].tasks_data.completed_tasks.slice(0, 3).map((task: any, index: number) => (
+                                    <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg border border-green-100">
+                                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-medium text-gray-900">{task.name}</p>
+                                        {task.category && <p className="text-sm text-gray-500">{task.category}</p>}
+                                        {task.notes && <p className="text-sm text-gray-600 mt-1 italic">"{task.notes}"</p>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {snapshots[currentReportIndex].tasks_data.completed_tasks.length > 3 && (
+                                    <p className="text-sm text-gray-500 text-center">
+                                      +{snapshots[currentReportIndex].tasks_data.completed_tasks.length - 3} more completed
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Next Steps */}
+                            {snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length > 0 && (
+                              <div>
+                                <h4 className="font-medium text-blue-800 mb-3 flex items-center">
+                                  <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+                                  Currently Working On
+                                </h4>
+                                <div className="space-y-2">
+                                  {snapshots[currentReportIndex].tasks_data.in_progress_tasks.slice(0, 2).map((task: any, index: number) => (
+                                    <div key={index} className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
+                                      <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="font-medium text-gray-900">{task.name}</p>
+                                        {task.category && <p className="text-sm text-gray-500">{task.category}</p>}
+                                        {task.notes && <p className="text-sm text-gray-600 mt-1 italic">"{task.notes}"</p>}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Key Information */}
+                        {(snapshots[currentReportIndex].tasks_data.upcoming_milestones || snapshots[currentReportIndex].tasks_data.next_steps) && (
+                          <div className="grid md:grid-cols-2 gap-6">
+                            {snapshots[currentReportIndex].tasks_data.upcoming_milestones && (
+                              <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-3">Upcoming Milestones</h3>
+                                <p className="text-gray-700 leading-relaxed">{snapshots[currentReportIndex].tasks_data.upcoming_milestones}</p>
+                              </div>
+                            )}
+                            {snapshots[currentReportIndex].tasks_data.next_steps && (
+                              <div>
+                                <h3 className="text-lg font-medium text-gray-900 mb-3">Next Steps</h3>
+                                <p className="text-gray-700 leading-relaxed">{snapshots[currentReportIndex].tasks_data.next_steps}</p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Risks/Blockers if any */}
+                        {snapshots[currentReportIndex].tasks_data.risks_and_blockers && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                            <h3 className="text-lg font-medium text-amber-800 mb-2 flex items-center">
+                              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              Attention Needed
+                            </h3>
+                            <p className="text-amber-800 leading-relaxed">{snapshots[currentReportIndex].tasks_data.risks_and_blockers}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Tesla-Style Timeline Scrubber */}
+                  {snapshots.length > 1 && (
+                    <div className="p-6 border-t border-gray-100 bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-sm font-medium text-gray-700 flex-shrink-0">Timeline:</span>
+                        <div className="flex-1 relative">
+                          <div className="h-2 bg-gray-200 rounded-full">
+                            <div 
+                              className="h-2 bg-gray-700 rounded-full transition-all duration-300"
+                              style={{ width: `${((snapshots.length - currentReportIndex - 1) / (snapshots.length - 1)) * 100}%` }}
+                            />
+                          </div>
+                          <div className="flex justify-between mt-2 text-xs text-gray-500">
+                            <span>Oldest</span>
+                            <span>Newest</span>
+                          </div>
+                          {/* Interactive dots */}
+                          <div className="absolute top-0 left-0 w-full h-2 flex justify-between">
+                            {snapshots.map((_, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setCurrentReportIndex(index)}
+                                className={`w-4 h-4 rounded-full -mt-1 transition-colors cursor-pointer ${
+                                  index === currentReportIndex 
+                                    ? 'bg-gray-700 ring-2 ring-gray-300' 
+                                    : 'bg-gray-400 hover:bg-gray-500'
+                                }`}
+                                title={`${formatDateTime(snapshots[index].created_at).date} at ${formatDateTime(snapshots[index].created_at).time}`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-900">Project Manager:</span>
-                  <span className="ml-2 text-gray-600">{selectedProject.pm_assigned}</span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-900">Start Date:</span>
-                  <span className="ml-2 text-gray-600">{formatDate(selectedProject.start_date)}</span>
-                </div>
-                {selectedProject.end_date && (
-                  <div>
-                    <span className="font-medium text-gray-900">End Date:</span>
-                    <span className="ml-2 text-gray-600">{formatDate(selectedProject.end_date)}</span>
-                  </div>
-                )}
-                {selectedProject.team_members && selectedProject.team_members.length > 0 && (
-                  <div className="md:col-span-2">
-                    <span className="font-medium text-gray-900">Team:</span>
-                    <span className="ml-2 text-gray-600">{selectedProject.team_members.join(', ')}</span>
-                  </div>
-                )}
-              </div>
 
-              {selectedProject.onedrive_link && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <a
-                    href={selectedProject.onedrive_link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    📁 Access Project Files
-                  </a>
+              {/* No Updates State */}
+              {!snapshotsLoading && snapshots.length === 0 && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-8 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                      <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Updates Yet</h3>
+                    <p className="text-gray-500">Your project manager will share the first update soon.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Loading State */}
+              {snapshotsLoading && (
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="p-8 text-center">
+                    <div className="animate-spin w-8 h-8 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+                    <p className="text-gray-500">Loading your updates...</p>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Project Updates */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent Project Updates</h3>
-              
-              {snapshotsLoading ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">Loading updates...</div>
-                </div>
-              ) : snapshots.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-gray-500">No updates available yet.</div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {snapshots.map((snapshot) => (
-                    <div key={snapshot.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
-                            {snapshot.tasks_data?.week_number ? 
-                              `Week ${snapshot.tasks_data.week_number} Update` : 
-                              `Update - ${formatDate(snapshot.week_start_date)}`
-                            }
-                          </h4>
-                          <p className="text-sm text-gray-500">
-                            Updated {formatDate(snapshot.created_at)} by {snapshot.created_by}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          {snapshots.indexOf(snapshot) === 0 && (
-                            <span className="text-xs font-medium text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                              Latest
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Project Overview Card */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Overview</h3>
+                  
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm font-medium text-gray-900">Status</span>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedProject.overall_status)}`}>
+                      {selectedProject.overall_status}
+                    </span>
+                  </div>
+
+                  {selectedProject.overall_summary && (
+                    <div className="mb-4">
+                      <p className="text-gray-700 text-sm leading-relaxed">{selectedProject.overall_summary}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Started</span>
+                      <span className="font-medium text-gray-900">{formatDate(selectedProject.start_date)}</span>
+                    </div>
+                    {selectedProject.end_date && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Target End</span>
+                        <span className="font-medium text-gray-900">{formatDate(selectedProject.end_date)}</span>
+                      </div>
+                    )}
+                    {selectedProject.team_members && selectedProject.team_members.length > 0 && (
+                      <div className="pt-3 border-t border-gray-200">
+                        <span className="text-gray-500 text-sm">Team Members</span>
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {selectedProject.team_members.map((member, index) => (
+                            <span key={index} className="inline-block px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium">
+                              {member}
                             </span>
-                          )}
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(snapshot.overall_status)}`}>
-                            {snapshot.overall_status}
-                          </span>
+                          ))}
                         </div>
                       </div>
-
-                      {snapshot.tasks_data && (
-                        <div className="space-y-4">
-                          {/* Executive Summary */}
-                          {snapshot.tasks_data.executive_summary && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Executive Summary</h5>
-                              <p className="text-gray-700">{snapshot.tasks_data.executive_summary}</p>
-                            </div>
-                          )}
-
-                          {/* Task Progress - New Structured Format */}
-                          {(snapshot.tasks_data.completed_tasks?.length > 0 || 
-                            snapshot.tasks_data.in_progress_tasks?.length > 0 || 
-                            snapshot.tasks_data.blocked_tasks?.length > 0) && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-3">Task Progress</h5>
-                              
-                              {/* Completed Tasks */}
-                              {snapshot.tasks_data.completed_tasks?.length > 0 && (
-                                <div className="mb-3">
-                                  <h6 className="text-sm font-medium text-green-800 mb-2">✅ Completed ({snapshot.tasks_data.completed_tasks.length})</h6>
-                                  <div className="space-y-1">
-                                    {snapshot.tasks_data.completed_tasks.map((task: any, index: number) => (
-                                      <div key={index} className="text-sm text-gray-700 pl-4">
-                                        <span className="font-medium">{task.name}</span>
-                                        {task.category && <span className="text-gray-500 ml-2">({task.category})</span>}
-                                        {task.notes && <p className="text-gray-600 italic ml-2">{task.notes}</p>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* In Progress Tasks */}
-                              {snapshot.tasks_data.in_progress_tasks?.length > 0 && (
-                                <div className="mb-3">
-                                  <h6 className="text-sm font-medium text-blue-800 mb-2">🔄 In Progress ({snapshot.tasks_data.in_progress_tasks.length})</h6>
-                                  <div className="space-y-1">
-                                    {snapshot.tasks_data.in_progress_tasks.map((task: any, index: number) => (
-                                      <div key={index} className="text-sm text-gray-700 pl-4">
-                                        <span className="font-medium">{task.name}</span>
-                                        {task.category && <span className="text-gray-500 ml-2">({task.category})</span>}
-                                        {task.notes && <p className="text-gray-600 italic ml-2">{task.notes}</p>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-
-                              {/* Blocked Tasks */}
-                              {snapshot.tasks_data.blocked_tasks?.length > 0 && (
-                                <div className="mb-3">
-                                  <h6 className="text-sm font-medium text-red-800 mb-2">🚫 Blocked ({snapshot.tasks_data.blocked_tasks.length})</h6>
-                                  <div className="space-y-1">
-                                    {snapshot.tasks_data.blocked_tasks.map((task: any, index: number) => (
-                                      <div key={index} className="text-sm text-gray-700 pl-4">
-                                        <span className="font-medium">{task.name}</span>
-                                        {task.category && <span className="text-gray-500 ml-2">({task.category})</span>}
-                                        {task.notes && <p className="text-gray-600 italic ml-2">{task.notes}</p>}
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {/* Legacy Format Support */}
-                          {snapshot.tasks_data.key_accomplishments && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Key Accomplishments</h5>
-                              <p className="text-gray-700 whitespace-pre-line">{snapshot.tasks_data.key_accomplishments}</p>
-                            </div>
-                          )}
-
-                          {snapshot.tasks_data.upcoming_milestones && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Upcoming Milestones</h5>
-                              <p className="text-gray-700 whitespace-pre-line">{snapshot.tasks_data.upcoming_milestones}</p>
-                            </div>
-                          )}
-
-                          {(snapshot.tasks_data.budget_status || snapshot.tasks_data.timeline_status) && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {snapshot.tasks_data.budget_status && (
-                                <div>
-                                  <h5 className="font-medium text-gray-900 mb-1">Budget Status</h5>
-                                  <p className="text-gray-700">{snapshot.tasks_data.budget_status}</p>
-                                </div>
-                              )}
-                              {snapshot.tasks_data.timeline_status && (
-                                <div>
-                                  <h5 className="font-medium text-gray-900 mb-1">Timeline Status</h5>
-                                  <p className="text-gray-700">{snapshot.tasks_data.timeline_status}</p>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {snapshot.tasks_data.risks_and_blockers && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Risks & Blockers</h5>
-                              <p className="text-gray-700 whitespace-pre-line">{snapshot.tasks_data.risks_and_blockers}</p>
-                            </div>
-                          )}
-
-                          {snapshot.tasks_data.next_steps && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Next Steps</h5>
-                              <p className="text-gray-700 whitespace-pre-line">{snapshot.tasks_data.next_steps}</p>
-                            </div>
-                          )}
-
-                          {snapshot.tasks_data.client_feedback && (
-                            <div>
-                              <h5 className="font-medium text-gray-900 mb-2">Client Feedback</h5>
-                              <p className="text-gray-700">{snapshot.tasks_data.client_feedback}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    )}
+                  </div>
                 </div>
-              )}
+              </div>
+
+
+              {/* Support */}
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Have questions about your project? Reach out to your project manager.
+                  </p>
+                  <div className="flex items-center p-3 bg-gray-50 rounded-lg">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-blue-600 font-semibold text-sm">
+                        {selectedProject.pm_assigned.split(' ').map(n => n[0]).join('')}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{selectedProject.pm_assigned}</p>
+                      <p className="text-xs text-gray-500">Project Manager</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
       </div>
+
     </div>
   )
 }

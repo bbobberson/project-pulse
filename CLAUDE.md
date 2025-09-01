@@ -4,10 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
-- **Development server**: `npm run dev`
-- **Build for production**: `npm run build`
-- **Production server**: `npm start`
-- **Linting**: `npm run lint`
+- **Development server**: `pnpm run dev` (may start on port 3001+ if 3000 is occupied)
+- **Build for production**: `pnpm run build`
+- **Production server**: `pnpm start`
+- **Linting**: `pnpm run lint`
+- **Package management**: Uses `pnpm` exclusively - never mix npm/yarn commands
+- **Clean development**: Delete `.next` folder and restart if encountering compilation issues
+- **Cache cleanup**: Remove `node_modules/.cache` if experiencing persistent build issues
 
 ## Architecture Overview
 
@@ -48,13 +51,25 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 
 **Client Portal:**
 - Token-based access at `/client` route
-- Project roadmap view at `/client/[projectId]/roadmap`
-- Real-time project updates without authentication required
+- Tesla-inspired roadmap view at `/client/[projectId]/roadmap` with collapsible weeks
+- Historical update navigation with timeline scrubber
+- Download functionality for roadmap data (JSON export)
+
+**Dual-Mode Dashboard System:**
+- **Present Mode**: Clean, production-ready interface (`PresentModeDashboard.tsx`)
+- **Future Mode**: Cosmic, animated interface (`FutureModeUniverse.tsx`) with floating project cards
+- Mode toggle via clickable InfoWorks logo (easter egg functionality)
+- **Immersive Mode**: Full-screen project detail view within Future Mode
+- Conditional loading messages based on active mode
 
 **Design System:**
-- Tesla-inspired clean UI with Framer Motion animations
-- Tailwind CSS for styling
-- Custom InfoWorks branding components
+- **Present Mode**: Tesla-inspired clean UI with professional styling, Inter font
+- **Future Mode**: Cosmic interface with Orbitron font for futuristic elements
+- Framer Motion animations throughout (hover: scale 1.02, tap: scale 0.98)
+- Custom InfoWorks branding components with animated SVG logo
+- Consistent #1C2B45 brand color for primary buttons
+- All clickable elements must have `cursor-pointer` class
+- Status indicators use color-coded pills (green/yellow/red) with proper contrast
 
 ### Environment Configuration
 
@@ -97,6 +112,19 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - JSONB format allows flexible data structure for different update types
 - Client portal consumes this data for progress visualization
 
+### Dashboard Architecture
+
+**Mode Management:**
+- Dashboard state managed by `dashboardMode` variable (`'present' | 'future'`)
+- Present Mode renders `PresentModeDashboard` component
+- Future Mode renders `FutureModeUniverse` component with optional immersive view
+- Both modes share same data sources and API endpoints
+
+**Component Communication:**
+- Logo click handlers pass mode toggle functions between parent/child components
+- Onboarding modal conditionally renders based on mode (disabled in Future Mode for testing)
+- Shared project data flows through props to both dashboard implementations
+
 ### Important Notes
 
 - Always use the async `supabase()` function in server-side code
@@ -104,3 +132,169 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - RLS policies can cause infinite recursion - keep them simple
 - Client portal must work without authentication (token-based only)
 - Production database schema must match development for deployments to succeed
+- Future Mode immersive view uses `enterImmersiveMode(project)` for navigation
+- Package manager: uses `pnpm` - ensure `pnpm-lock.yaml` stays synchronized with `package.json`
+
+### Project Navigation Architecture
+
+**Recent UX Improvements (Present Mode Only):**
+- **Whole card clickable**: Project cards navigate to `/dashboard/[projectId]` details page with subtle lift hover effect
+- **Streamlined actions**: Removed redundant action cards from project details page 
+- **Primary action bar**: Update Pulse (brand color) and Roadmap buttons moved to top action bar alongside status
+- **Update Pulse consistency**: Lightning icon integrated inside button across dashboard and project pages
+- **Tesla-inspired navigation**: All "Back to Dashboard" links use consistent button styling with chevron icons
+- **Enhanced UX patterns**: Loading spinners, toast notifications, keyboard navigation, contextual empty states
+- **Inline editing system**: Complete project details editing with visual feedback, team member autocomplete, and keyboard shortcuts
+
+**Route Structure:**
+- `/dashboard` - Main dashboard (Present/Future mode toggle)
+- `/dashboard/[projectId]` - **NEW**: Project details page (read-only view with actions)
+- `/dashboard/[projectId]/edit` - **LEGACY**: Full project editing (still used by some flows)  
+- `/dashboard/[projectId]/update-pulse` - Weekly progress updates
+- `/dashboard/[projectId]/roadmap` - Task management with drag-and-drop
+- `/dashboard/[projectId]/client-access` - **LEGACY**: Client token management (moved to details page)
+- `/client/[projectId]/roadmap` - **NEW**: Tesla-inspired client roadmap with collapsible weeks
+
+### Present Mode UI Consistency Rules
+
+**Header Pattern (All Project Pages):**
+- InfoWorks logo on right, consistent spacing and sizing
+- "Back to Dashboard" Tesla-inspired button: `bg-gray-100 text-gray-700 rounded-lg` with chevron icon
+- Title uses `text-3xl font-bold`, subtitle uses `text-gray-600 mt-1` 
+- Divider line between back button and title section
+
+**Background & Layout:**
+- **CRITICAL**: Present Mode uses `bg-gray-50` background, NOT black
+- White cards with `border border-gray-200` and `shadow-sm`
+- Professional gray text hierarchy (`text-gray-900`, `text-gray-600`, `text-gray-500`)
+- Brand color `#1C2B45` for primary actions only
+
+**Button & Form Styling:**
+- Primary buttons: Brand color `#1C2B45` with `hover:opacity-90` and motion animations
+- Secondary buttons: `bg-gray-100 text-gray-700` with `hover:bg-gray-200`  
+- Input fields: `px-4 py-3` padding with `border border-gray-300` and `focus-brand` (uses #1C2B45)
+- Dropdowns: Custom SVG arrow positioned `right_12px_center` with `pr-10` padding  
+- Motion animations: `whileHover={{ scale: 1.02 }}` and `whileTap={{ scale: 0.98 }}` throughout
+- Team member autocomplete with smart suggestions from previous projects
+- Toast notifications for user feedback with auto-dismiss
+
+**Status Management:**
+- Status pills: `bg-green-100 text-green-800` (on-track), `bg-yellow-100 text-yellow-800` (at-risk), `bg-red-100 text-red-800` (off-track)
+- Pills must not wrap (`whitespace-nowrap`) 
+- Use flex layout with `flex-shrink-0` for status containers
+- Replace "All Status" with "Show All" in filters
+
+### Future Mode Sacred Design Elements (NEVER CHANGE)
+
+**From REVOLUTIONARY_DESIGN_RULES.md (Git commit: 2b180e2):**
+- Black cosmic void background with glass morphism effects
+- "Your Universe" 8xl/9xl title with Orbitron font
+- Magnetic proximity interactions with subtle floating animations
+- Bottom-positioned search with "Search the cosmos..." placeholder
+- Dynamic card sizing based on project count and status
+- Status-driven color gradients (emerald, amber, rose)
+- Cosmic particles and gentle magnetic pull toward cursor
+- **Never use these elements in Present Mode**
+
+### Development Patterns
+
+**Supabase Integration:**
+- Server-side: Use async `supabase()` from `@/lib/supabase-server`
+- Client-side: Direct import from `@/lib/supabase-browser`
+- Database `project_id` fields are `text` type, not UUID
+- RLS policies can cause infinite recursion - keep them simple
+
+**Component Architecture:**
+- Present Mode: `PresentModeDashboard.tsx` - Tesla-inspired clean UI
+- Future Mode: `FutureModeUniverse.tsx` - Cosmic interface with immersive view
+- Shared: Both modes use same data sources and API endpoints
+- Mode toggle via clickable InfoWorks logo (easter egg functionality)
+
+**Package Management:**
+- Uses `pnpm` as package manager
+- Ensure `pnpm-lock.yaml` stays synchronized with `package.json`
+- Never mix npm/yarn commands with pnpm project
+
+### Week Number Calculation
+
+**Critical Implementation Details:**
+- Week numbers are calculated based on project `start_date`, not calendar weeks
+- Formula: `Math.max(1, Math.ceil(daysDiff / 7))` where `daysDiff` is days since project start
+- Week 1 = first 7 days of project, Week 2 = days 8-14, etc.
+- This calculation is used in `/dashboard/[projectId]/update-pulse` for creating snapshots
+- Ensures consistent week numbering across project lifecycle
+
+### Pulse Update System
+
+**Snapshot Creation Logic:**
+- Each "Update Pulse" action creates a NEW `weekly_snapshots` record (no deduplication)
+- Multiple updates per day/week are preserved as separate snapshots
+- Snapshots include: `project_id`, `week_number`, `week_start_date`, `tasks_data` (JSONB), `overall_status`
+- Client portal displays all snapshots in chronological order (newest first)
+
+**Critical Bug Fixes Applied:**
+- ✅ **Week calculation**: Fixed from hardcoded week 1 to dynamic calculation based on project start
+- ✅ **Snapshot deduplication**: Removed logic that was overwriting existing snapshots
+- ✅ **Client historical view**: Implemented Tesla-inspired navigation for viewing all past reports
+
+### Client Portal Historical Navigation
+
+**Tesla-Inspired Design Pattern:**
+- **No modals**: All navigation happens inline on the same page
+- **Previous/Next arrows**: Left arrow = older reports, right arrow = newer reports
+- **Timeline scrubber**: Interactive progress bar with clickable dots for each report
+- **Report counter**: Shows current position (e.g., "2 of 5")
+- **Date & time display**: Shows both date and time to differentiate multiple daily updates
+
+**Navigation State Management:**
+- Uses `currentReportIndex` (0 = newest, higher = older)
+- All report content dynamically updates based on `snapshots[currentReportIndex]`
+- Timeline tooltips show full datetime on hover
+- Smooth transitions between reports without page reloads
+
+### Client Roadmap Architecture
+
+**Tesla-Inspired Roadmap Features (Latest):**
+- **Collapsible weeks system**: Each week can be expanded/collapsed with smart auto-collapse for completed weeks
+- **Progress overview dashboard**: Summary cards showing completed/in-progress/upcoming/blocked task counts
+- **Task detail cards**: Milestone indicators, assigned team members, estimated hours, and status pills
+- **Download functionality**: JSON export of complete roadmap data structure
+- **Responsive week detection**: Auto-highlights current week based on project start date
+- **Smart collapsing logic**: Automatically collapses completed weeks (except recent ones) on load
+
+**Implementation Details:**
+- Uses `collapsedWeeks` Set state to track which weeks are collapsed
+- `getCurrentWeek()` calculates current week from project start date
+- `toggleWeekCollapse()` handles expand/collapse functionality
+- `downloadRoadmap()` generates JSON export with project and task data
+- Auto-collapse logic runs on component mount with setTimeout to avoid state conflicts
+
+### Known Issues to Address
+
+- Client access URLs may generate with wrong port (3000 vs actual dev port)  
+- Legacy edit page `/dashboard/[projectId]/edit` still exists alongside new details page
+- Download currently exports JSON - should be upgraded to PDF format
+- Browser tab lacks InfoWorks branding (favicon and title)
+
+### Recent Major Enhancements
+
+**Dashboard UX Improvements:**
+- Loading spinners on navigation buttons with proper disabled states
+- Toast notification system for user feedback (success/error states)
+- Keyboard navigation: arrow keys to navigate cards, Enter to select, Escape to exit
+- Contextual empty states with actionable recovery buttons
+- Enhanced card hover effects with subtle lift animation
+
+**Project Details Enhancements:**  
+- Inline editing system with visual feedback (green border flash on save)
+- Team members as smart tag system with autocomplete from previous projects
+- Action bar consolidation: Update Pulse and Roadmap moved to top alongside status
+- Consistent Tesla-inspired button styling across all navigation elements
+- Professional error handling with loading states and user feedback
+
+**Client Portal Revolutionary Redesign:**
+- **Historical report access**: Tesla-style inline navigation replacing modal approach
+- **Timeline-based browsing**: Interactive scrubber with clickable timeline dots
+- **Multiple updates per day**: Proper support with time display alongside dates
+- **Smooth transitions**: No page reloads when switching between historical reports
+- **Week number accuracy**: Fixed calculation based on actual project timeline
