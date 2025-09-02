@@ -51,6 +51,35 @@ export default function UpdatePulse() {
   const [taskUpdates, setTaskUpdates] = useState<Record<string, TaskUpdate>>({})
   const [overallStatus, setOverallStatus] = useState('')
   const [executiveSummary, setExecutiveSummary] = useState('')
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
+
+  // Auto-dismiss toast
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [toast])
+
+  const generateRandomSummary = () => {
+    const summaries = [
+      "This week we knocked out several key milestones and the project is gaining serious momentum. The team is clicking on all cylinders and we're ahead of schedule on most deliverables.",
+      "Solid progress across the board with no major blockers this week. We're maintaining our velocity and the client feedback has been overwhelmingly positive.",
+      "Another productive week in the books with strong execution from the entire team. We're tracking well against our timeline and everything is looking good for next week's deliverables.",
+      "We made progress faster than a caffeinated developer on Friday afternoon. The team is firing on all cylinders and the client is going to love what we've built.",
+      "Crushing it this week with zero drama and maximum results. The stars are aligning and we're about to deliver something truly spectacular.",
+      "Steady progress with some impressive breakthroughs in key areas. The team chemistry is outstanding and we're building something the client will be proud of.",
+      "This week was all about execution and we absolutely nailed it. Quality is high, morale is higher, and we're positioned perfectly for next week's sprint.",
+      "We hit our stride this week with seamless coordination across all workstreams. The client is going to be thrilled with the progress and attention to detail.",
+      "Another week, another set of milestones conquered with style. The team continues to exceed expectations and deliver work that makes everyone look good.",
+      "Momentum is building and the project is starting to feel like a well-oiled machine. We're not just meeting expectations - we're raising the bar entirely."
+    ]
+    
+    const randomSummary = summaries[Math.floor(Math.random() * summaries.length)]
+    setExecutiveSummary(randomSummary)
+  }
 
   useEffect(() => {
     async function fetchData() {
@@ -259,7 +288,36 @@ export default function UpdatePulse() {
         alert(`Error creating pulse update: ${snapshotError.message}. Please try again.`)
       } else {
         console.log('Pulse update created successfully')
-        router.push('/dashboard')
+        
+        // Send email notifications to clients
+        try {
+          const emailResponse = await fetch('/api/send-pulse-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              projectId: projectId,
+              weekNumber: currentWeek 
+            })
+          })
+          
+          if (emailResponse.ok) {
+            const result = await emailResponse.json()
+            console.log('Email notifications sent:', result.message)
+            setToast({ message: `Pulse update published! ${result.message}`, type: 'success' })
+          } else {
+            console.error('Failed to send email notifications')
+            setToast({ message: 'Pulse update published (email notifications failed)', type: 'success' })
+          }
+        } catch (emailError) {
+          console.error('Error sending email notifications:', emailError)
+          setToast({ message: 'Pulse update published (email notifications failed)', type: 'success' })
+        }
+        
+        // Show toast for 3 seconds before redirecting
+        setTimeout(() => {
+          setToast(null)
+          router.push('/dashboard')
+        }, 3000)
       }
     } catch (err) {
       console.error('Error:', err)
@@ -364,7 +422,16 @@ export default function UpdatePulse() {
 
           {/* Executive Summary */}
           <div className="bg-white rounded-3xl border border-gray-100 p-8">
-            <h2 className="text-xl font-medium text-gray-900 mb-6">Executive Summary</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-medium text-gray-900">Executive Summary</h2>
+              <button
+                type="button"
+                onClick={generateRandomSummary}
+                className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-sm rounded-lg transition-colors cursor-pointer"
+              >
+                🎲 Random
+              </button>
+            </div>
             <textarea
               value={executiveSummary}
               onChange={(e) => setExecutiveSummary(e.target.value)}
@@ -498,6 +565,28 @@ export default function UpdatePulse() {
           </div>
         </form>
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <div className={`px-6 py-4 rounded-lg shadow-lg text-white font-medium ${
+            toast.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}>
+            <div className="flex items-center space-x-2">
+              {toast.type === 'success' ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              )}
+              <span>{toast.message}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

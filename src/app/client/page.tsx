@@ -232,27 +232,27 @@ function ClientPortalContent() {
       <div className="min-h-screen" style={{ backgroundColor: '#fafafa' }}>
         {/* Header */}
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="flex justify-between items-center py-8">
-              <div className="flex items-center space-x-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4 sm:py-8">
+              <div className="flex items-center space-x-3 sm:space-x-8">
                 <InfoWorksLogo width={120} height={36} />
                 <div>
-                  <h1 className="text-3xl font-light text-gray-900">Project Pulse</h1>
-                  <p className="text-gray-400 text-sm mt-1">Client Portal</p>
+                  <h1 className="text-xl sm:text-3xl font-light text-gray-900">Project Pulse</h1>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Client Portal</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="max-w-4xl mx-auto px-8 py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-24">
           <div className="text-center">
             {isNoToken ? (
               <div>
                 <div className="w-16 h-16 mx-auto mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
                   <div className="w-6 h-6 bg-gray-400 rounded-full"></div>
                 </div>
-                <h2 className="text-5xl font-extralight text-gray-900 mb-6">Project Portal</h2>
+                <h2 className="text-3xl sm:text-5xl font-extralight text-gray-900 mb-6">Project Portal</h2>
                 <p className="text-xl text-gray-500 mb-16 max-w-lg mx-auto font-light leading-relaxed">
                   Real-time project insights delivered through secure, personalized access
                 </p>
@@ -350,7 +350,7 @@ function ClientPortalContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Welcome Modal for First-Time Users */}
       {selectedProject && (
         <ClientWelcomeModal 
@@ -362,26 +362,31 @@ function ClientPortalContent() {
       
       {/* Tesla-Inspired Clean Header */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex justify-between items-center py-8">
-            <div className="flex items-center space-x-8">
-              <InfoWorksLogo width={120} height={36} />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-8 space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-8 w-full sm:w-auto">
+              <div className="hidden sm:block">
+                <InfoWorksLogo width={120} height={36} />
+              </div>
+              <div className="block sm:hidden">
+                <InfoWorksLogo width={90} height={27} />
+              </div>
               {selectedProject && (
                 <>
-                  <div className="w-px h-8 bg-gray-300"></div>
+                  <div className="hidden sm:block w-px h-8 bg-gray-300"></div>
                   <div>
-                    <h1 className="text-2xl font-semibold text-gray-900">{selectedProject.name}</h1>
-                    <p className="text-gray-500 text-sm mt-1">Welcome, Bill Butler</p>
+                    <h1 className="text-lg sm:text-2xl font-semibold text-gray-900">{selectedProject.name}</h1>
+                    <p className="text-gray-500 text-xs sm:text-sm mt-1">Welcome, Bill Butler</p>
                   </div>
                 </>
               )}
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               {selectedProject && (
                 <>
                   <button
                     onClick={() => router.push(`/client/${selectedProject.id}/roadmap?token=${tokenData?.token}`)}
-                    className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium"
+                    className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
                   >
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m2-6h10a2 2 0 002-2V7a2 2 0 00-2-2H9z" />
@@ -394,7 +399,7 @@ function ClientPortalContent() {
                       href={selectedProject.onedrive_link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium"
+                      className="flex items-center px-4 py-3 sm:px-4 sm:py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors cursor-pointer font-medium text-sm sm:text-base w-full sm:w-auto justify-center sm:justify-start"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
@@ -403,19 +408,27 @@ function ClientPortalContent() {
                       Files
                     </a>
                   )}
+                  
+                  <div className="block sm:flex sm:justify-center w-full sm:w-auto mt-2 sm:mt-0">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(selectedProject.overall_status)} block text-center sm:inline`}>
+                      {selectedProject.overall_status}
+                    </span>
+                  </div>
                 </>
               )}
               
-              <div className="text-right border-l border-gray-300 pl-4">
-                <p className="text-sm text-gray-500">Project Manager</p>
-                <p className="font-medium text-gray-900">{selectedProject?.pm_assigned}</p>
-              </div>
+              {selectedProject && (
+                <div className="hidden sm:block text-right border-l border-gray-300 pl-4">
+                  <p className="text-sm text-gray-500">Project Manager</p>
+                  <p className="font-medium text-gray-900">{selectedProject.pm_assigned}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-8 py-12">
+      <div className="px-4 py-6 sm:max-w-7xl sm:mx-auto sm:px-6 lg:px-8 sm:py-12">
         {/* Project Selector with Search and Filters */}
         {shouldShowProjectSelector && (
           <div className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
@@ -531,48 +544,52 @@ function ClientPortalContent() {
         )}
 
         {selectedProject && (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4 lg:gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-4 sm:space-y-8">
               {/* Current Report with Tesla Navigation */}
               {!snapshotsLoading && snapshots.length > 0 && (
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                  <div className="p-8">
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center space-x-4">
-                        {/* Previous Report Button */}
-                        <button
-                          onClick={() => setCurrentReportIndex(Math.min(currentReportIndex + 1, snapshots.length - 1))}
-                          disabled={currentReportIndex >= snapshots.length - 1}
-                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                          </svg>
-                        </button>
-                        
-                        <div>
-                          <h2 className="text-2xl font-semibold text-gray-900">
-                            {currentReportIndex === 0 ? 'Latest Update' : 'Project Update'}
-                          </h2>
-                          <div className="flex items-center space-x-3 mt-1">
-                            <p className="text-gray-600 font-medium">{formatDateTime(snapshots[currentReportIndex].created_at).date}</p>
-                            <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                            <p className="text-gray-500 text-sm">{formatDateTime(snapshots[currentReportIndex].created_at).time}</p>
-                          </div>
+                <div className="bg-white rounded-lg border border-gray-200 shadow-sm mx-auto max-w-full">
+                  <div className="p-3 sm:p-6 lg:p-8">
+                    <div className="relative flex items-center justify-center mb-6">
+                      {/* Left Arrow - Absolutely Positioned */}
+                      <button
+                        onClick={() => setCurrentReportIndex(Math.min(currentReportIndex + 1, snapshots.length - 1))}
+                        disabled={currentReportIndex >= snapshots.length - 1}
+                        className="absolute left-0 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      
+                      {/* Center Content */}
+                      <div className="text-center">
+                        <h2 className="text-2xl font-semibold text-gray-900">
+                          {currentReportIndex === 0 ? 'Latest Update' : 'Project Update'}
+                        </h2>
+                        <div className="flex items-center justify-center space-x-3 mt-1">
+                          <p className="text-gray-600 font-medium">{formatDateTime(snapshots[currentReportIndex].created_at).date}</p>
+                          <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
+                          <p className="text-gray-500 text-sm">{formatDateTime(snapshots[currentReportIndex].created_at).time}</p>
                         </div>
-                        
-                        {/* Next Report Button */}
-                        <button
-                          onClick={() => setCurrentReportIndex(Math.max(currentReportIndex - 1, 0))}
-                          disabled={currentReportIndex <= 0}
-                          className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                        >
-                          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </button>
                       </div>
+                      
+                      {/* Right Arrow - Absolutely Positioned */}
+                      <button
+                        onClick={() => setCurrentReportIndex(Math.max(currentReportIndex - 1, 0))}
+                        disabled={currentReportIndex <= 0}
+                        className="absolute right-0 p-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                      >
+                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      
+                      {/* Status Pills - Positioned Below */}
+                    </div>
+                    
+                    <div className="flex items-center justify-end mb-6 -mt-6">
                       
                       <div className="flex items-center space-x-3">
                         {currentReportIndex === 0 && (
@@ -610,18 +627,18 @@ function ClientPortalContent() {
                           <div>
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Progress This Week</h3>
                             
-                            <div className="grid grid-cols-3 gap-4 mb-6">
-                              <div className="text-center p-4 bg-green-50 rounded-xl border border-green-100">
-                                <div className="text-2xl font-bold text-green-800">{snapshots[currentReportIndex].tasks_data.completed_tasks?.length || 0}</div>
-                                <div className="text-sm font-medium text-green-700">Completed</div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+                              <div className="text-center p-3 sm:p-4 bg-green-50 rounded-xl border border-green-100">
+                                <div className="text-xl sm:text-2xl font-bold text-green-800">{snapshots[currentReportIndex].tasks_data.completed_tasks?.length || 0}</div>
+                                <div className="text-xs sm:text-sm font-medium text-green-700">Completed</div>
                               </div>
-                              <div className="text-center p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                <div className="text-2xl font-bold text-blue-800">{snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length || 0}</div>
-                                <div className="text-sm font-medium text-blue-700">In Progress</div>
+                              <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                <div className="text-xl sm:text-2xl font-bold text-blue-800">{snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length || 0}</div>
+                                <div className="text-xs sm:text-sm font-medium text-blue-700">In Progress</div>
                               </div>
-                              <div className="text-center p-4 bg-red-50 rounded-xl border border-red-100">
-                                <div className="text-2xl font-bold text-red-800">{snapshots[currentReportIndex].tasks_data.blocked_tasks?.length || 0}</div>
-                                <div className="text-sm font-medium text-red-700">Blocked</div>
+                              <div className="text-center p-3 sm:p-4 bg-red-50 rounded-xl border border-red-100 col-span-2 sm:col-span-1">
+                                <div className="text-xl sm:text-2xl font-bold text-red-800">{snapshots[currentReportIndex].tasks_data.blocked_tasks?.length || 0}</div>
+                                <div className="text-xs sm:text-sm font-medium text-red-700">Blocked</div>
                               </div>
                             </div>
 
@@ -782,10 +799,10 @@ function ClientPortalContent() {
             </div>
 
             {/* Sidebar */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6 mt-6 lg:mt-0">
               {/* Project Overview Card */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Overview</h3>
                   
                   <div className="flex items-center justify-between mb-4">
@@ -831,7 +848,7 @@ function ClientPortalContent() {
 
               {/* Support */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h3>
                   <p className="text-sm text-gray-600 mb-4">
                     Have questions about your project? Reach out to your project manager.

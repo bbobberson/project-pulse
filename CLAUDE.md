@@ -269,12 +269,37 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - `downloadRoadmap()` generates JSON export with project and task data
 - Auto-collapse logic runs on component mount with setTimeout to avoid state conflicts
 
+### Email Notification System
+
+**Resend Integration (December 2024):**
+- Client pulse notifications implemented using Resend API
+- Clean email template with greeting, portal link, and professional sign-off
+- Only sends to active client users with `email_notifications: true`
+- API route: `/api/send-pulse-notification`
+- Integrated into pulse update flow (automatic after snapshot creation)
+
+**Production Deployment Requirements:**
+- ✅ **Environment Variables**: Add to Vercel dashboard under Settings → Environment Variables
+  - `RESEND_API_KEY` - Resend API key for email functionality
+- ✅ **Domain Verification**: Custom domain `rothman.fit` verified with Resend for production emails
+- ✅ **Email Configuration**: Emails sent from `pulse@rothman.fit` with professional branding
+- ✅ **Rate Limiting**: 600ms delay between emails to respect Resend's 2 req/sec limit
+- ✅ **Multi-recipient Support**: Can send to any email address with verified domain
+
+### Favicon Configuration
+
+**Next.js 15 Icon System:**
+- Custom InfoWorks favicon with Project Pulse branding located at `/src/app/favicon.ico`
+- SVG version available at `/public/favicon.svg` with InfoWorks "i" logo and pulse wave
+- Configured via metadata in `layout.tsx` - avoid manual `<link>` tags in `<head>`
+- Clear `.next` cache if favicon changes don't appear
+
 ### Known Issues to Address
 
 - Client access URLs may generate with wrong port (3000 vs actual dev port)  
 - Legacy edit page `/dashboard/[projectId]/edit` still exists alongside new details page
 - Download currently exports JSON - should be upgraded to PDF format
-- Browser tab lacks InfoWorks branding (favicon and title)
+- Gmail + nodemailer invitation system not working reliably (manually adding PMs to DB)
 
 ### Recent Major Enhancements
 

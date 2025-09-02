@@ -42,6 +42,7 @@ export default function Login() {
     }
   }
 
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <motion.div 
@@ -127,17 +128,13 @@ export default function Login() {
           </form>
           
           <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Don't have an account?{' '}
-              <motion.button
-                onClick={() => router.push('/auth/signup')}
-                whileHover={{ scale: 1.02 }}
-                className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
-              >
-                Sign up here
-              </motion.button>
-            </p>
-            
+            <motion.button
+              onClick={() => router.push('/auth/forgot-password')}
+              whileHover={{ scale: 1.02 }}
+              className="text-sm text-gray-600 hover:text-gray-900 font-medium cursor-pointer transition-colors"
+            >
+              Forgot password?
+            </motion.button>
           </div>
         </motion.div>
       </motion.div>

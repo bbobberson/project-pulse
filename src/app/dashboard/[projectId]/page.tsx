@@ -883,7 +883,8 @@ export default function ProjectDetails() {
         </div>
 
 
-        {/* Client Access Management */}
+        {/* Client Access Management - Temporarily commented out for manual workaround */}
+        {/*
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -893,6 +894,7 @@ export default function ProjectDetails() {
           <h3 className="text-xl font-semibold text-gray-900 mb-6">Client Access Management</h3>
           <ClientTokenManager projectId={projectId} />
         </motion.div>
+        */}
       </div>
 
       {/* Toast Notifications */}

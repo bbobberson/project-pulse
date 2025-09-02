@@ -132,8 +132,8 @@ export default function PresentModeDashboard({
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-3 sm:py-4 space-y-3 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 w-full sm:w-auto">
               <motion.div
                 className="cursor-pointer"
                 onClick={onToggleToFutureMode}
@@ -141,23 +141,28 @@ export default function PresentModeDashboard({
                 whileTap={{ scale: 0.95 }}
                 title="Click to toggle to Future Mode"
               >
-                <InfoWorksLogo width={120} height={36} />
+                <div className="hidden sm:block">
+                  <InfoWorksLogo width={120} height={36} />
+                </div>
+                <div className="block sm:hidden">
+                  <InfoWorksLogo width={80} height={24} />
+                </div>
               </motion.div>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="hidden sm:block h-6 w-px bg-gray-300" />
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">Project Pulse</h1>
+                <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Project Pulse</h1>
                 {currentUser && (
-                  <p className="text-gray-600 text-sm">{currentUser.full_name}</p>
+                  <p className="text-gray-600 text-xs sm:text-sm">{currentUser.full_name}</p>
                 )}
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4 w-full sm:w-auto">
               {currentUser?.role === 'admin' && (
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onShowInviteModal}
-                  className="px-4 py-2 btn-primary text-sm font-medium transition-colors cursor-pointer"
+                  className="px-3 py-2 sm:px-4 btn-primary text-xs sm:text-sm font-medium transition-colors cursor-pointer w-full sm:w-auto text-center"
                 >
                   Invite PM
                 </motion.button>
@@ -168,7 +173,7 @@ export default function PresentModeDashboard({
                 onClick={() => handleNavigation('/dashboard/new-project', 'new-project')}
                 disabled={loadingButton === 'new-project'}
                 style={{ backgroundColor: '#1C2B45' }}
-                className="px-4 py-2 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center space-x-2"
+                className="px-3 py-2 sm:px-4 text-white text-xs sm:text-sm font-medium rounded-lg hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-2 w-full sm:w-auto"
               >
                 {loadingButton === 'new-project' ? (
                   <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
@@ -312,7 +317,7 @@ export default function PresentModeDashboard({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             <AnimatePresence>
               {filteredProjects.map((project, index) => (
@@ -326,7 +331,7 @@ export default function PresentModeDashboard({
                     setKeyboardMode(false)
                     handleNavigation(`/dashboard/${project.id}`, `project-${project.id}`)
                   }}
-                  className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all duration-200 cursor-pointer ${
+                  className={`bg-white rounded-lg sm:rounded-xl shadow-sm border overflow-hidden transition-all duration-200 cursor-pointer ${
                     keyboardMode && selectedCardIndex === index
                       ? 'border-blue-500 shadow-lg ring-2 ring-blue-200'
                       : 'border-gray-200 hover:shadow-lg hover:border-gray-300 hover:-translate-y-1'
@@ -343,15 +348,15 @@ export default function PresentModeDashboard({
                       : 'bg-gray-400'
                   }`} />
                   
-                  <div className="p-6 h-full flex flex-col">
+                  <div className="p-4 sm:p-6 h-full flex flex-col">
                     {/* Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="space-y-1 flex-1 min-w-0 pr-3">
-                        <h3 className="text-xl font-semibold text-gray-900">{project.name}</h3>
-                        <p className="text-gray-600">{project.client_name}</p>
+                    <div className="flex flex-col sm:flex-row items-start justify-between mb-3 sm:mb-4 space-y-2 sm:space-y-0">
+                      <div className="space-y-1 flex-1 min-w-0 sm:pr-3">
+                        <h3 className="text-lg sm:text-xl font-semibold text-gray-900">{project.name}</h3>
+                        <p className="text-sm sm:text-base text-gray-600">{project.client_name}</p>
                       </div>
-                      <div className="flex-shrink-0">
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${
+                      <div className="flex-shrink-0 self-start sm:self-center">
+                        <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap ${
                           project.overall_status === 'on-track'
                             ? 'bg-green-100 text-green-800'
                             : project.overall_status === 'at-risk'
@@ -366,14 +371,14 @@ export default function PresentModeDashboard({
                     </div>
 
                     {/* Project Info */}
-                    <div className="grid grid-cols-2 gap-4 mb-6 text-sm flex-grow">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6 text-xs sm:text-sm flex-grow">
                       <div>
-                        <span className="text-gray-500">PM</span>
-                        <p className="text-gray-900 font-medium">{project.pm_assigned}</p>
+                        <span className="text-gray-500 text-xs sm:text-sm">PM</span>
+                        <p className="text-gray-900 font-medium text-sm sm:text-base truncate">{project.pm_assigned}</p>
                       </div>
                       <div>
-                        <span className="text-gray-500">Timeline</span>
-                        <p className="text-gray-900 font-medium">
+                        <span className="text-gray-500 text-xs sm:text-sm">Timeline</span>
+                        <p className="text-gray-900 font-medium text-xs sm:text-sm">
                           {new Date(project.start_date).toLocaleDateString()} - {project.end_date ? new Date(project.end_date).toLocaleDateString() : 'Ongoing'}
                         </p>
                       </div>
@@ -390,12 +395,12 @@ export default function PresentModeDashboard({
                         }}
                         disabled={loadingButton === `pulse-${project.id}`}
                         style={{ backgroundColor: '#1C2B45' }}
-                        className="px-4 py-2 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center space-x-2"
+                        className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1 sm:space-x-2 w-full sm:w-auto"
                       >
                         {loadingButton === `pulse-${project.id}` ? (
-                          <div className="animate-spin h-3 w-3 border-2 border-white border-t-transparent rounded-full"></div>
+                          <div className="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full"></div>
                         ) : (
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
                         )}

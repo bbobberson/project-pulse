@@ -8,6 +8,11 @@ export const metadata: Metadata = {
     default: "Project Pulse by InfoWorks"
   },
   description: "Professional project management dashboard with dual Present/Future modes - by InfoWorks",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -18,8 +23,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet" />
       </head>
       <body className="antialiased">

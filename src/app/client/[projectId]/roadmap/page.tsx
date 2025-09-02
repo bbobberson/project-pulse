@@ -585,26 +585,26 @@ export default function ClientRoadmap() {
     return (
       <div className="min-h-screen" style={{ backgroundColor: '#fafafa' }}>
         <div className="bg-white border-b border-gray-100">
-          <div className="max-w-6xl mx-auto px-8">
-            <div className="flex justify-between items-center py-8">
-              <div className="flex items-center space-x-8">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-4 sm:py-8">
+              <div className="flex items-center space-x-3 sm:space-x-8">
                 <InfoWorksLogo width={120} height={36} />
                 <div>
-                  <h1 className="text-3xl font-light text-gray-900">Project Pulse</h1>
-                  <p className="text-gray-400 text-sm mt-1">Client Portal</p>
+                  <h1 className="text-xl sm:text-3xl font-light text-gray-900">Project Pulse</h1>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Client Portal</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="max-w-4xl mx-auto px-8 py-24">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-24">
           <div className="text-center">
             <div className="w-16 h-16 mx-auto mb-8 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center">
               <div className="w-6 h-6 bg-gray-400 rounded-full"></div>
             </div>
-            <h2 className="text-5xl font-extralight text-gray-900 mb-6">Access Required</h2>
-            <p className="text-xl text-gray-500 mb-16 max-w-lg mx-auto font-light leading-relaxed">
+            <h2 className="text-3xl sm:text-5xl font-extralight text-gray-900 mb-6">Access Required</h2>
+            <p className="text-lg sm:text-xl text-gray-500 mb-8 sm:mb-16 max-w-lg mx-auto font-light leading-relaxed">
               {authError}
             </p>
             <div className="text-center p-8 bg-white rounded-3xl border border-gray-100">
@@ -657,60 +657,64 @@ export default function ClientRoadmap() {
     <div className="min-h-screen" style={{ backgroundColor: '#fafafa' }}>
       {/* Tesla-Inspired Header */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-8">
-          <div className="flex justify-between items-center py-8">
-            <div className="flex items-center space-x-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-8 space-y-4 sm:space-y-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-8 w-full sm:w-auto">
               <motion.button
                 onClick={() => router.push(`/client?token=${searchParams.get('token')}`)}
-                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer"
+                className="flex items-center px-3 py-2 sm:px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer text-sm sm:text-base"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
                 Dashboard
               </motion.button>
-              <div className="h-6 w-px bg-gray-300" />
+              <div className="hidden sm:block h-6 w-px bg-gray-300" />
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{project.name}</h1>
-                <p className="text-gray-600 mt-1">Project Roadmap • {project.client_name}</p>
+                <h1 className="text-xl sm:text-3xl font-bold text-gray-900">{project.name}</h1>
+                <p className="text-sm sm:text-base text-gray-600 mt-1">Project Roadmap • {project.client_name}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
               <motion.button
                 onClick={downloadRoadmap}
-                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer"
+                className="flex items-center px-3 py-2 sm:px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer text-sm sm:text-base"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 Download
               </motion.button>
-              <InfoWorksLogo width={120} height={36} />
+              <div className="hidden sm:block">
+                <InfoWorksLogo width={120} height={36} />
+              </div>
+              <div className="block sm:hidden">
+                <InfoWorksLogo width={80} height={24} />
+              </div>
             </div>
           </div>
         </div>
       </div>
 
 
-      <div className="max-w-7xl mx-auto px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-12">
         <div className="space-y-6">
               {roadmapTasks.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white rounded-3xl border border-gray-200 shadow-sm p-12 text-center"
-                >
+                  className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-12 text-center">
                   <div className="w-16 h-16 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
                     <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h2m2-6h10a2 2 0 002-2V7a2 2 0 00-2-2H9z" />
                     </svg>
                   </div>
-                  <h3 className="text-2xl font-light text-gray-900 mb-3">No Timeline Available</h3>
-                  <p className="text-gray-500 font-light">Your project manager will create the roadmap soon.</p>
+                  <h3 className="text-xl sm:text-2xl font-light text-gray-900 mb-3">No Timeline Available</h3>
+                  <p className="text-sm sm:text-base text-gray-500 font-light">Your project manager will create the roadmap soon.</p>
                 </motion.div>
               ) : (
                 <div className="space-y-6">
@@ -718,33 +722,32 @@ export default function ClientRoadmap() {
                   <motion.div 
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-3xl border border-gray-200 shadow-sm p-8"
-                  >
-                    <h2 className="text-2xl font-light text-gray-900 mb-8">Progress Overview</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm p-4 sm:p-8">
+                    <h2 className="text-xl sm:text-2xl font-light text-gray-900 mb-4 sm:mb-8">Progress Overview</h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
                       <div className="text-center">
-                        <div className="text-3xl font-light text-green-600 mb-2">
+                        <div className="text-2xl sm:text-3xl font-light text-green-600 mb-1 sm:mb-2">
                           {roadmapTasks.filter(task => task.status === 'completed').length}
                         </div>
-                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Completed</div>
+                        <div className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Completed</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-light text-blue-600 mb-2">
+                        <div className="text-2xl sm:text-3xl font-light text-blue-600 mb-1 sm:mb-2">
                           {roadmapTasks.filter(task => task.status === 'in-progress').length}
                         </div>
-                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">In Progress</div>
+                        <div className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">In Progress</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-light text-gray-600 mb-2">
+                        <div className="text-2xl sm:text-3xl font-light text-gray-600 mb-1 sm:mb-2">
                           {roadmapTasks.filter(task => task.status === 'not-started').length}
                         </div>
-                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Upcoming</div>
+                        <div className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Upcoming</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-3xl font-light text-red-600 mb-2">
+                        <div className="text-2xl sm:text-3xl font-light text-red-600 mb-1 sm:mb-2">
                           {roadmapTasks.filter(task => task.status === 'blocked').length}
                         </div>
-                        <div className="text-sm font-medium text-gray-600 uppercase tracking-wide">Blocked</div>
+                        <div className="text-xs sm:text-sm font-medium text-gray-600 uppercase tracking-wide">Blocked</div>
                       </div>
                     </div>
                   </motion.div>
@@ -767,19 +770,19 @@ export default function ClientRoadmap() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
-                          className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden"
+                          className="bg-white rounded-2xl sm:rounded-3xl border border-gray-200 shadow-sm overflow-hidden"
                         >
-                          <div className="p-8">
-                            <div className="flex items-center justify-between mb-6">
-                              <div className="flex items-center space-x-4">
+                          <div className="p-4 sm:p-8">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                              <div className="flex items-center space-x-3 sm:space-x-4">
                                 <motion.button
                                   onClick={() => toggleWeekCollapse(weekNumber)}
-                                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                                   whileHover={{ scale: 1.02 }}
                                   whileTap={{ scale: 0.98 }}
                                 >
                                   <svg 
-                                    className={`w-5 h-5 text-gray-400 transition-transform ${
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform ${
                                       isCollapsed ? 'rotate-0' : 'rotate-90'
                                     }`} 
                                     fill="none" 
@@ -790,7 +793,7 @@ export default function ClientRoadmap() {
                                   </svg>
                                 </motion.button>
                                 <div>
-                                  <h3 className="text-xl font-medium text-gray-900">Week {weekNumber}</h3>
+                                  <h3 className="text-lg sm:text-xl font-medium text-gray-900">Week {weekNumber}</h3>
                                   {isCollapsed && (
                                     <p className="text-sm text-gray-500 mt-1">
                                       {tasksInWeek.length} tasks {isCompleted && `• ${completedTasks} completed`}
@@ -798,9 +801,9 @@ export default function ClientRoadmap() {
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-3">
+                              <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
                                 {isCurrentWeek && (
-                                  <span className="px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full">
+                                  <span className="px-2 sm:px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded-full whitespace-nowrap">
                                     Current Week
                                   </span>
                                 )}
@@ -813,51 +816,51 @@ export default function ClientRoadmap() {
                             </div>
                             
                             {!isCollapsed && (
-                              <div className="space-y-4">
+                              <div className="space-y-3 sm:space-y-4">
                                 {tasksByWeek[weekNumber].map((task) => (
                                   <div key={task.id} className={`group transition-all hover:shadow-sm ${
                                     task.is_milestone 
-                                      ? 'p-6 bg-blue-50 rounded-2xl border border-blue-100' 
-                                      : 'p-6 bg-gray-50 rounded-2xl border border-gray-100'
+                                      ? 'p-4 sm:p-6 bg-blue-50 rounded-xl sm:rounded-2xl border border-blue-100' 
+                                      : 'p-4 sm:p-6 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-100'
                                   }`}>
-                                    <div className="flex items-start justify-between">
-                                      <div className="flex items-start space-x-4 flex-1">
+                                    <div className="flex flex-col sm:flex-row items-start justify-between space-y-3 sm:space-y-0">
+                                      <div className="flex items-start space-x-3 sm:space-x-4 flex-1 w-full sm:w-auto">
                                         {task.is_milestone && (
-                                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mt-1 flex-shrink-0">
-                                            <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-100 rounded-full flex items-center justify-center mt-0.5 sm:mt-1 flex-shrink-0">
+                                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                             </svg>
                                           </div>
                                         )}
                                         <div className="flex-1 min-w-0">
-                                          <div className="text-lg font-medium text-gray-900 mb-2">
+                                          <div className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                                             {task.custom_task_name || task.task_template?.name}
                                           </div>
                                           {task.task_template && (
-                                            <div className="text-sm text-gray-500 mb-3 font-medium">
+                                            <div className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 font-medium">
                                               {task.task_template.category}
                                             </div>
                                           )}
                                           {task.assigned_to && (
-                                            <div className="text-sm text-gray-600 mb-2">
+                                            <div className="text-xs sm:text-sm text-gray-600 mb-1 sm:mb-2">
                                               <span className="font-medium">Assigned:</span> {task.assigned_to}
                                             </div>
                                           )}
                                           {task.notes && (
-                                            <div className="text-sm text-gray-600 italic leading-relaxed">
+                                            <div className="text-xs sm:text-sm text-gray-600 italic leading-relaxed">
                                               {task.notes}
                                             </div>
                                           )}
                                         </div>
                                       </div>
                                       
-                                      <div className="flex items-center space-x-4 ml-6 flex-shrink-0">
+                                      <div className="flex items-center space-x-2 sm:space-x-4 sm:ml-6 flex-shrink-0 self-start sm:self-center">
                                         {task.estimated_hours && (
-                                          <span className="text-sm font-medium text-gray-500">
+                                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                                             {task.estimated_hours}h
                                           </span>
                                         )}
-                                        <span className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap ${
+                                        <span className={`px-2 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap ${
                                           task.status === 'completed' 
                                             ? 'bg-green-100 text-green-800'
                                             : task.status === 'in-progress'
