@@ -1,58 +1,79 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from 'framer-motion';
 import InfoWorksLogo from '@/components/InfoWorksLogo';
 import { createClient } from '@supabase/supabase-js';
 
-export default function ForgotPassword() {
+export default function ResetPasswordCallback() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+
+  useEffect(() => {
+    // Extract tokens from URL hash
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      // Set the session with the tokens
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      });
+    } else {
+      setError('Invalid or expired reset link. Please request a new password reset.');
+    }
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.trim()) return;
     
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // Try using client-side Supabase directly
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-
-      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-        redirectTo: `${window.location.origin}/auth/reset-password-callback`,
+      const { error } = await supabase.auth.updateUser({
+        password: password
       });
 
       if (error) {
-        console.error('Client-side reset error:', error);
-        
-        // Handle rate limiting with user-friendly message
-        if (error.message.includes('rate limit') || error.message.includes('Too many requests')) {
-          setError('Please wait a few minutes before requesting another password reset.');
-        } else if (error.message.includes('Email not confirmed')) {
-          setError('This email address is not registered. Please contact your administrator.');
-        } else {
-          setError('Unable to send reset email. Please try again later or contact support.');
-        }
+        setError(error.message);
       } else {
-        setSent(true);
+        setSuccess(true);
+        // Redirect to login after a brief delay
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 3000);
       }
     } catch (err: any) {
-      console.error('Reset error:', err);
-      setError(`Error: ${err.message || 'Unknown error'}`);
+      setError('Failed to update password. Please try again.');
     } finally {
       setLoading(false);
     }
   }
 
-  if (sent) {
+  if (success) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
         <motion.div 
@@ -70,10 +91,9 @@ export default function ForgotPassword() {
               </svg>
             </div>
             
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Check your inbox</h1>
-            <p className="text-gray-600 mb-8">
-              We've sent password reset instructions to<br />
-              <span className="font-medium text-gray-900">{email}</span>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Password Updated</h1>
+            <p className="text-gray-600 mb-6">
+              Your password has been successfully updated. You'll be redirected to sign in shortly.
             </p>
             
             <motion.button
@@ -82,7 +102,7 @@ export default function ForgotPassword() {
               whileTap={{ scale: 0.98 }}
               className="w-full px-4 py-3 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all cursor-pointer font-medium"
             >
-              Back to sign in
+              Sign in now
             </motion.button>
           </div>
         </motion.div>
@@ -112,7 +132,7 @@ export default function ForgotPassword() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Reset your password</h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Set New Password</h1>
             <p className="text-gray-600">Transparency. Delivered.</p>
           </motion.div>
         </div>
@@ -131,30 +151,44 @@ export default function ForgotPassword() {
             )}
             
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                New Password
               </label>
               <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                autoComplete="username"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 transition-all"
-                placeholder="your.email@company.com"
+                placeholder="Enter your new password"
+              />
+            </div>
+            
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus-brand text-gray-900 transition-all"
+                placeholder="Confirm your new password"
               />
             </div>
             
             <motion.button
               type="submit"
-              disabled={loading || !email.trim()}
+              disabled={loading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               style={{ backgroundColor: '#1C2B45' }}
               className="w-full px-4 py-3 text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50 cursor-pointer font-medium"
             >
-              {loading ? 'Sending...' : 'Send reset instructions'}
+              {loading ? 'Updating Password...' : 'Update Password'}
             </motion.button>
           </form>
           

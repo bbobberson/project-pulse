@@ -12,6 +12,7 @@ export async function POST(request: NextRequest) {
     const supabaseClient = await supabase()
     
     // Look up the token in the database
+    console.log('🔍 Searching for token:', token.substring(0, 10) + '...')
     const { data: tokenData, error: tokenError } = await supabaseClient
       .from('client_access_tokens')
       .select('*')
@@ -19,7 +20,10 @@ export async function POST(request: NextRequest) {
       .eq('is_active', true)
       .single()
 
+    console.log('🔍 Token query result:', { tokenData, tokenError })
+
     if (tokenError || !tokenData) {
+      console.log('❌ Token validation failed:', tokenError?.message || 'No token data found')
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 })
     }
 

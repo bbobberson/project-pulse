@@ -312,42 +312,40 @@ export default function ProjectDetails() {
               </div>
             </div>
             
-            <InfoWorksLogo />
+            <div className="flex items-center space-x-4">
+              {/* Action Buttons */}
+              <motion.button
+                onClick={() => router.push(`/dashboard/${projectId}/update-pulse`)}
+                className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all cursor-pointer font-medium"
+                style={{ backgroundColor: '#1C2B45' }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Update Pulse
+              </motion.button>
+              
+              <motion.button
+                onClick={() => router.push(`/dashboard/${projectId}/roadmap`)}
+                className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer font-medium"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l6 3 6-3v15l-6 3-6-3z" />
+                </svg>
+                Roadmap
+              </motion.button>
+              
+              <InfoWorksLogo />
+            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
-        {/* Action Buttons - Right aligned to card */}
-        <div className="max-w-4xl mx-auto mb-6">
-          <div className="flex justify-end space-x-4">
-            <motion.button
-              onClick={() => router.push(`/dashboard/${projectId}/update-pulse`)}
-              className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all cursor-pointer font-medium"
-              style={{ backgroundColor: '#1C2B45' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Update Pulse
-            </motion.button>
-            
-            <motion.button
-              onClick={() => router.push(`/dashboard/${projectId}/roadmap`)}
-              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer font-medium"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l6 3 6-3v15l-6 3-6-3z" />
-              </svg>
-              Roadmap
-            </motion.button>
-          </div>
-        </div>
 
         {/* Project Information - Tesla Single Column Layout */}
         <div className="space-y-12 max-w-4xl mx-auto mb-12">

@@ -490,7 +490,7 @@ export default function ProjectRoadmap() {
             <div className="flex items-center justify-between py-6">
               <div className="flex items-center space-x-6">
                 <motion.button
-                  onClick={() => router.push('/dashboard')}
+                  onClick={() => router.push(`/dashboard/${projectId}`)}
                   className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-medium cursor-pointer"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -498,7 +498,7 @@ export default function ProjectRoadmap() {
                   <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
-                  Dashboard
+                  Project Details
                 </motion.button>
                 <div className="h-6 w-px bg-gray-300" />
                 <div>

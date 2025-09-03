@@ -66,7 +66,7 @@ export default function Login() {
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Project Pulse</h1>
-            <p className="text-gray-600">Welcome back to your project command center</p>
+            <p className="text-gray-600">Transparency. Delivered.</p>
           </motion.div>
         </div>
         

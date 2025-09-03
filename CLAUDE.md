@@ -271,7 +271,7 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 
 ### Email Notification System
 
-**Resend Integration (December 2024):**
+**Resend Integration (September 2025):**
 - Client pulse notifications implemented using Resend API
 - Clean email template with greeting, portal link, and professional sign-off
 - Only sends to active client users with `email_notifications: true`
@@ -280,11 +280,20 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 
 **Production Deployment Requirements:**
 - ✅ **Environment Variables**: Add to Vercel dashboard under Settings → Environment Variables
-  - `RESEND_API_KEY` - Resend API key for email functionality
-- ✅ **Domain Verification**: Custom domain `rothman.fit` verified with Resend for production emails
-- ✅ **Email Configuration**: Emails sent from `pulse@rothman.fit` with professional branding
+  - `RESEND_API_KEY=re_JD9CqKw6_CwFxee8pckehyuirQD7QT9rD` - Resend API key for email functionality
+- ✅ **Domain Verification**: Custom subdomain `send.rothman.fit` verified with Resend for production emails
+- ✅ **Email Configuration**: Emails sent from `pulse@send.rothman.fit` with professional branding
 - ✅ **Rate Limiting**: 600ms delay between emails to respect Resend's 2 req/sec limit
 - ✅ **Multi-recipient Support**: Can send to any email address with verified domain
+
+**DNS Configuration (Critical):**
+- **Subdomain approach required**: Use `send.rothman.fit` subdomain, NOT root domain
+- **Namecheap DNS records**: 
+  - MX Record: Host = `send`, Value = `feedback-smtp.us-east-1.amazonses.com`, Priority = 10
+  - TXT SPF: Host = `send`, Value = `v=spf1 include:amazonses.com ~all`
+  - TXT DKIM: Host = `resend._domainkey.send`, Value = (Resend-provided DKIM key)
+- **Common issues**: Root domain DNS verification fails; always use subdomain approach
+- **Verification time**: Can take 15 minutes to 24 hours for DNS propagation
 
 ### Favicon Configuration
 
@@ -300,6 +309,7 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - Legacy edit page `/dashboard/[projectId]/edit` still exists alongside new details page
 - Download currently exports JSON - should be upgraded to PDF format
 - Gmail + nodemailer invitation system not working reliably (manually adding PMs to DB)
+- **Resend DNS complexity**: Email service has caused multiple production delays due to DNS verification issues
 
 ### Recent Major Enhancements
 
@@ -313,9 +323,10 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 **Project Details Enhancements:**  
 - Inline editing system with visual feedback (green border flash on save)
 - Team members as smart tag system with autocomplete from previous projects
-- Action bar consolidation: Update Pulse and Roadmap moved to top alongside status
+- Action bar consolidation: Update Pulse and Roadmap moved above Project Info card, right-aligned
 - Consistent Tesla-inspired button styling across all navigation elements
 - Professional error handling with loading states and user feedback
+- Status dropdown moved to Project Information card header for contextual placement
 
 **Client Portal Revolutionary Redesign:**
 - **Historical report access**: Tesla-style inline navigation replacing modal approach
@@ -323,3 +334,23 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - **Multiple updates per day**: Proper support with time display alongside dates
 - **Smooth transitions**: No page reloads when switching between historical reports
 - **Week number accuracy**: Fixed calculation based on actual project timeline
+- **Status display optimization**: Single status pill in Project Overview card to avoid redundancy
+
+**Brand Consistency Implementation:**
+- **Tagline standardization**: "Transparency. Delivered." implemented across all client-facing pages
+- **Logo consistency**: InfoWorks logo properly positioned in headers across all interfaces
+- **Email branding**: Custom domain `rothman.fit` configured for professional email delivery
+- **Authentication flow**: Complete Tesla-inspired password reset system with Supabase integration
+
+### Branding Guidelines
+
+**Official Tagline:** "Transparency. Delivered."
+- Used consistently across login, forgot password, reset password, and client portal pages
+- Replaces various inconsistent taglines throughout the application
+- Should appear as subtitle under "Project Pulse" in authentication flows
+
+**Navigation Patterns:**
+- **Roadmap page**: "Back to Project Details" (not Dashboard) for proper flow context
+- **Project details**: Action buttons positioned above content cards, right-aligned to card width
+- **Client portal**: Single status display in Project Overview card header
+- **Header consistency**: Clean separation between navigation and content across all pages

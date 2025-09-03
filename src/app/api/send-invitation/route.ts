@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
             <h3>What makes Project Pulse different:</h3>
             <ul>
               <li><strong>Visual Roadmaps:</strong> Build and share project timelines with intuitive drag-and-drop tools</li>
-              <li><strong>Client Transparency:</strong> Give clients real-time access to project progress without overwhelming them</li>
+              <li><strong>Transparency. Delivered.:</strong> Give clients real-time access to project progress without overwhelming them</li>
               <li><strong>Smart Updates:</strong> Weekly pulse reports that keep everyone in the loop</li>
               <li><strong>Secure Access:</strong> Each client gets private access to only their projects</li>
               <li><strong>Professional Presentation:</strong> Everything is designed to make you and your projects look great</li>

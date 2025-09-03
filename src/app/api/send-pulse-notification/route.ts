@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
     const portalLink = `${baseUrl}/client?token=${tokens[0].token}`
 
-    // Send emails to all eligible clients with rate limiting
-    const emailPromises = clientUsers.map(async (user, index) => {
-      // Add delay between emails to respect Resend's 2 req/sec rate limit
+    // Send emails sequentially with rate limiting to respect Resend's 2 req/sec limit
+    const results = []
+    for (let index = 0; index < clientUsers.length; index++) {
+      const user = clientUsers[index]
+      
+      // Add delay between emails (except for the first one)
       if (index > 0) {
         await new Promise(resolve => setTimeout(resolve, 600)) // 600ms delay between emails
       }
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest) {
                             <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto 30px auto;">
                               <tr>
                                 <td style="background-color: rgba(255, 255, 255, 0.1); padding: 20px 32px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.15); text-align: center;">
-                                  <img src="${baseUrl}/infoworks-logo.svg" alt="InfoWorks Logo" width="140" height="48" style="display: block; margin: 0 auto; max-width: 100%; height: auto;" />
+                                  <img src="${baseUrl}/infoworks-logo.png" alt="InfoWorks Logo" width="140" height="48" style="display: block; margin: 0 auto; max-width: 100%; height: auto;" />
                                 </td>
                               </tr>
                             </table>
@@ -162,7 +165,7 @@ export async function POST(request: NextRequest) {
                         <tr>
                           <td style="text-align: center;">
                             <p style="margin: 0 0 12px 0; color: #1e293b; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 1px;">INFOWORKS</p>
-                            <p style="margin: 0; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">Project Management • Delivered with Precision</p>
+                            <p style="margin: 0; color: #64748b; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 500; letter-spacing: 0.5px;">Transparency. Delivered.</p>
                           </td>
                         </tr>
                       </table>
@@ -191,38 +194,36 @@ export async function POST(request: NextRequest) {
         </html>
       `
 
-      return resend.emails.send({
-        from: 'Project Pulse <pulse@rothman.fit>',
-        to: user.email,
-        subject: `Project Update: ${project.name} - Week ${weekNumber}`,
-        html: emailHtml,
-      })
-    })
+      try {
+        const result = await resend.emails.send({
+          from: 'Project Pulse <pulse@send.rothman.fit>',
+          to: user.email,
+          subject: `Project Update: ${project.name} - Week ${weekNumber}`,
+          html: emailHtml,
+        })
+        
+        console.log(`✅ Email sent to ${user.email}:`, result)
+        results.push({ status: 'fulfilled', value: result, email: user.email })
+        
+      } catch (error) {
+        console.error(`❌ Email failed for ${user.email}:`, error)
+        results.push({ status: 'rejected', reason: error, email: user.email })
+      }
+    }
 
-    const results = await Promise.allSettled(emailPromises)
     const successful = results.filter(result => result.status === 'fulfilled').length
     const failed = results.filter(result => result.status === 'rejected')
 
-    // Log detailed results for each email
-    results.forEach((result, index) => {
-      const user = clientUsers[index]
-      if (result.status === 'fulfilled') {
-        console.log(`✅ Email sent to ${user.email}:`, result.value)
-      } else {
-        console.error(`❌ Email failed for ${user.email}:`, result.reason)
-      }
-    })
-
     if (failed.length > 0) {
-      console.error('Failed emails summary:', failed.map((f, i) => ({ email: clientUsers[i]?.email, error: f.reason })))
+      console.error('Failed emails summary:', failed.map(f => ({ email: f.email, error: f.reason })))
     }
 
     return NextResponse.json({ 
       message: `Sent ${successful} of ${clientUsers.length} notification emails`,
       recipients: clientUsers.map(user => ({ name: user.name, email: user.email })),
       failures: failed.length,
-      results: results.map((result, index) => ({
-        email: clientUsers[index].email,
+      results: results.map(result => ({
+        email: result.email,
         status: result.status,
         error: result.status === 'rejected' ? result.reason : null
       }))

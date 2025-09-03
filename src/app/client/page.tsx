@@ -238,7 +238,7 @@ function ClientPortalContent() {
                 <InfoWorksLogo width={120} height={36} />
                 <div>
                   <h1 className="text-xl sm:text-3xl font-light text-gray-900">Project Pulse</h1>
-                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Client Portal</p>
+                  <p className="text-gray-400 text-xs sm:text-sm mt-1">Transparency. Delivered.</p>
                 </div>
               </div>
             </div>
@@ -409,11 +409,6 @@ function ClientPortalContent() {
                     </a>
                   )}
                   
-                  <div className="block sm:flex sm:justify-center w-full sm:w-auto mt-2 sm:mt-0">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${getStatusColor(selectedProject.overall_status)} block text-center sm:inline`}>
-                      {selectedProject.overall_status}
-                    </span>
-                  </div>
                 </>
               )}
               
@@ -597,9 +592,6 @@ function ClientPortalContent() {
                             Most Recent
                           </span>
                         )}
-                        <span className={`px-3 py-1.5 rounded-full text-sm font-medium ${getStatusColor(snapshots[currentReportIndex].overall_status)}`}>
-                          {snapshots[currentReportIndex].overall_status}
-                        </span>
                         
                         {/* Report Counter */}
                         {snapshots.length > 1 && (
@@ -803,10 +795,8 @@ function ClientPortalContent() {
               {/* Project Overview Card */}
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
                 <div className="p-4 sm:p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Overview</h3>
-                  
                   <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm font-medium text-gray-900">Status</span>
+                    <h3 className="text-lg font-semibold text-gray-900">Project Overview</h3>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedProject.overall_status)}`}>
                       {selectedProject.overall_status}
                     </span>
