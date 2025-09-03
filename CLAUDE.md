@@ -81,16 +81,47 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 
 ### Deployment
 
-**Production Deployment:**
-- Deployed on Vercel via GitHub Actions
-- Tag-based deployment: push git tags (e.g. `v1.0.0`) to trigger production deployment
-- Workflow file: `.github/workflows/deploy-prod.yml`
-- Production URL: `https://project-pulse-flax.vercel.app`
+**Production Deployment Process:**
+1. **Code Deployment:**
+   ```bash
+   # Commit changes
+   git add .
+   git commit -m "description of changes"
+   git push origin main
+   
+   # Tag for deployment
+   git tag v2.1.X  # increment version number
+   git push origin v2.1.X
+   ```
+
+2. **Database Migration (CRITICAL):**
+   - Production database schema MUST match development schema
+   - Apply migrations in production Supabase SQL Editor before deploying code
+   - Use `safe_production_migration.sql` for schema updates
+   - **NEVER deploy without syncing database schema first**
+
+3. **Environment Variables (Production Vercel):**
+   ```
+   RESEND_API_KEY=re_JD9CqKw6_CwFxee8pckehyuirQD7QT9rD
+   NEXT_PUBLIC_BASE_URL=https://project-pulse-flax.vercel.app
+   ```
+
+4. **GitHub Actions Workflow:**
+   - File: `.github/workflows/deploy-prod.yml`
+   - Triggers on git tags matching `v*` pattern
+   - **Known Issue**: Workflow uses `npm` but project uses `pnpm` - may need manual Vercel deployment
+   - Monitor at: `https://github.com/bbobberson/project-pulse/actions`
+
+**Production URLs:**
+- Main app: `https://project-pulse-flax.vercel.app`
+- Vercel Dashboard: Access via GitHub integration
 
 **Database Management:**
-- Separate Supabase projects for dev and production
+- Dev: Supabase project (wryhewzgpfzfkarxiwrc)
+- Production: Separate Supabase project  
+- **CRITICAL**: Always run database migrations before code deployment
 - Manual SQL migrations (no automated migration system)
-- RLS policies require careful management for proper access control
+- Use `safe_production_migration.sql` for safe schema updates
 
 ### Data Flow Patterns
 
@@ -310,6 +341,24 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - Download currently exports JSON - should be upgraded to PDF format
 - Gmail + nodemailer invitation system not working reliably (manually adding PMs to DB)
 - **Resend DNS complexity**: Email service has caused multiple production delays due to DNS verification issues
+
+### Troubleshooting Common Deployment Issues
+
+**Email API Returns 404 in Production:**
+1. Check GitHub Actions workflow ran successfully
+2. Verify database migration was applied (check for `client_users` table)
+3. Add `RESEND_API_KEY` environment variable in Vercel dashboard
+4. GitHub Actions uses `npm` but project uses `pnpm` - may need manual Vercel deployment
+
+**Database Schema Mismatch:**
+1. Always apply `safe_production_migration.sql` before deploying
+2. Production `projects.id` is `text` type, not `uuid`
+3. All foreign keys must match production schema types
+
+**GitHub Actions Not Triggering:**
+1. Check workflow file uses correct package manager (`pnpm` not `npm`)
+2. Verify GitHub secrets are configured (VERCEL_TOKEN, etc.)
+3. Monitor at: `https://github.com/bbobberson/project-pulse/actions`
 
 ### Recent Major Enhancements
 
