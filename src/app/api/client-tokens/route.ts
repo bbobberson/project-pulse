@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
       .insert({
         token,
         project_id: projectId,
+        client_name: clientName,
         client_email: clientEmail,
         expires_at: expiresAt.toISOString(),
         created_by: user.id,

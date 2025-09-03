@@ -308,7 +308,7 @@ export default function UpdatePulse() {
               body: JSON.stringify({
                 projectId: projectId,
                 clientEmail: clientUsers.email,
-                clientName: clientUsers.name,
+                clientName: clientUsers.name || 'Client User',
                 expiresInDays: 30
               })
             })
