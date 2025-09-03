@@ -289,6 +289,40 @@ export default function UpdatePulse() {
       } else {
         console.log('Pulse update created successfully')
         
+        // Create new client access token for this pulse update
+        try {
+          // Get client user info for token creation
+          const { data: clientUsers } = await supabase
+            .from('client_users')
+            .select('email, name')
+            .eq('project_id', projectId)
+            .eq('is_active', true)
+            .eq('email_notifications', true)
+            .limit(1)
+            .single()
+          
+          if (clientUsers) {
+            const tokenResponse = await fetch('/api/client-tokens', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                projectId: projectId,
+                clientEmail: clientUsers.email,
+                clientName: clientUsers.name,
+                expiresInDays: 30
+              })
+            })
+            
+            if (tokenResponse.ok) {
+              console.log('✅ Client access token created successfully')
+            } else {
+              console.error('❌ Failed to create client access token')
+            }
+          }
+        } catch (tokenError) {
+          console.error('Token creation error:', tokenError)
+        }
+        
         // Send email notifications to clients
         try {
           const emailResponse = await fetch('/api/send-pulse-notification', {
