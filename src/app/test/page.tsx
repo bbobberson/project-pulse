@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase-browser'
 
 export default function TestPage() {
@@ -27,9 +28,9 @@ export default function TestPage() {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">Database Test</h1>
         <p className="text-lg">{connectionStatus}</p>
-        <a href="/" className="mt-4 inline-block text-blue-600 hover:underline">
+        <Link href="/" className="mt-4 inline-block text-blue-600 hover:underline">
           ← Back to home
-        </a>
+        </Link>
       </div>
     </div>
   )

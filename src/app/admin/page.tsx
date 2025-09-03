@@ -121,13 +121,6 @@ export default function AdminDashboard() {
     try {
       // Just show empty list for now - invitations work, just not showing in admin
       setInvitations([])
-      return
-
-      if (error) {
-        console.error('Error fetching invitations:', error)
-      } else {
-        setInvitations(data || [])
-      }
     } catch (err) {
       console.error('Error:', err)
     }

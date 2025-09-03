@@ -41,7 +41,7 @@ export default function ClientRoadmap() {
   const params = useParams()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const projectId = params.projectId as string
+  const projectId = params?.projectId as string
   
   const [project, setProject] = useState<Project | null>(null)
   const [roadmapTasks, setRoadmapTasks] = useState<RoadmapTask[]>([])
@@ -76,7 +76,7 @@ export default function ClientRoadmap() {
 
   async function validateTokenAndFetchData() {
     try {
-      const token = searchParams.get('token')
+      const token = searchParams?.get('token')
       
       if (!token) {
         setAuthError('Access token is required. Please use the link provided by your project manager.')
@@ -624,7 +624,7 @@ export default function ClientRoadmap() {
         <div className="text-center">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Project not found</h2>
           <motion.button
-            onClick={() => router.push(`/client?token=${searchParams.get('token')}`)}
+            onClick={() => router.push(`/client?token=${searchParams?.get('token') || ''}`)}
             className="flex items-center px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer mx-auto"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
@@ -661,7 +661,7 @@ export default function ClientRoadmap() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center py-4 sm:py-8 space-y-4 sm:space-y-0">
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-8 w-full sm:w-auto">
               <motion.button
-                onClick={() => router.push(`/client?token=${searchParams.get('token')}`)}
+                onClick={() => router.push(`/client?token=${searchParams?.get('token') || ''}`)}
                 className="flex items-center px-3 py-2 sm:px-4 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium cursor-pointer text-sm sm:text-base"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

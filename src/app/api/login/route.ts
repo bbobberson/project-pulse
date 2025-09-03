@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.redirect(new URL("/dashboard", req.url), {
     status: 302,
   });
-  supabase.auth.setSession(data.session, { response: res });
+  await supabase.auth.setSession(data.session);
   return res;
 }

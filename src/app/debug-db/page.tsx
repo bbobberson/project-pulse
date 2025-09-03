@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase-browser'
 
 export default function DebugDB() {
@@ -86,9 +87,9 @@ export default function DebugDB() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold mb-4">Database Debug</h1>
         <pre className="bg-white p-4 rounded border text-sm text-gray-900">{tables}</pre>
-        <a href="/dashboard" className="mt-4 inline-block text-blue-600 hover:underline">
+        <Link href="/dashboard" className="mt-4 inline-block text-blue-600 hover:underline">
           ← Back to Dashboard
-        </a>
+        </Link>
       </div>
     </div>
   )

@@ -74,7 +74,7 @@ function ClientPortalContent() {
 
   async function validateTokenAndFetchProjects() {
     try {
-      const token = searchParams.get('token')
+      const token = searchParams?.get('token')
       
       if (!token) {
         setAuthError('Access token is required. Please use the link provided by your project manager.')
@@ -564,9 +564,9 @@ function ClientPortalContent() {
                           {currentReportIndex === 0 ? 'Latest Update' : 'Project Update'}
                         </h2>
                         <div className="flex items-center justify-center space-x-3 mt-1">
-                          <p className="text-gray-600 font-medium">{formatDateTime(snapshots[currentReportIndex].created_at).date}</p>
+                          <p className="text-gray-600 font-medium">{formatDateTime(snapshots[currentReportIndex]?.created_at || '').date}</p>
                           <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                          <p className="text-gray-500 text-sm">{formatDateTime(snapshots[currentReportIndex].created_at).time}</p>
+                          <p className="text-gray-500 text-sm">{formatDateTime(snapshots[currentReportIndex]?.created_at || '').time}</p>
                         </div>
                       </div>
                       
@@ -602,47 +602,51 @@ function ClientPortalContent() {
                       </div>
                     </div>
 
-                    {snapshots[currentReportIndex].tasks_data && (
-                      <div className="space-y-6">
-                        {/* Executive Summary */}
-                        {snapshots[currentReportIndex].tasks_data.executive_summary && (
-                          <div>
-                            <h3 className="text-lg font-medium text-gray-900 mb-3">Executive Summary</h3>
-                            <p className="text-gray-700 text-base leading-relaxed">{snapshots[currentReportIndex].tasks_data.executive_summary}</p>
-                          </div>
-                        )}
+                    {(() => {
+                      const currentSnapshot = snapshots[currentReportIndex]
+                      if (!currentSnapshot?.tasks_data) return null
+                      
+                      return (
+                        <div className="space-y-6">
+                          {/* Executive Summary */}
+                          {currentSnapshot.tasks_data.executive_summary && (
+                            <div>
+                              <h3 className="text-lg font-medium text-gray-900 mb-3">Executive Summary</h3>
+                              <p className="text-gray-700 text-base leading-relaxed">{currentSnapshot.tasks_data.executive_summary}</p>
+                            </div>
+                          )}
 
-                        {/* Progress Overview */}
-                        {(snapshots[currentReportIndex].tasks_data.completed_tasks?.length > 0 || 
-                          snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length > 0 || 
-                          snapshots[currentReportIndex].tasks_data.blocked_tasks?.length > 0) && (
+                          {/* Progress Overview */}
+                          {(currentSnapshot.tasks_data.completed_tasks?.length! > 0 || 
+                            currentSnapshot.tasks_data.in_progress_tasks?.length! > 0 || 
+                            currentSnapshot.tasks_data.blocked_tasks?.length! > 0) && (
                           <div>
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Progress This Week</h3>
                             
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
                               <div className="text-center p-3 sm:p-4 bg-green-50 rounded-xl border border-green-100">
-                                <div className="text-xl sm:text-2xl font-bold text-green-800">{snapshots[currentReportIndex].tasks_data.completed_tasks?.length || 0}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-green-800">{currentSnapshot.tasks_data.completed_tasks?.length || 0}</div>
                                 <div className="text-xs sm:text-sm font-medium text-green-700">Completed</div>
                               </div>
                               <div className="text-center p-3 sm:p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                <div className="text-xl sm:text-2xl font-bold text-blue-800">{snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length || 0}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-blue-800">{currentSnapshot.tasks_data.in_progress_tasks?.length || 0}</div>
                                 <div className="text-xs sm:text-sm font-medium text-blue-700">In Progress</div>
                               </div>
                               <div className="text-center p-3 sm:p-4 bg-red-50 rounded-xl border border-red-100 col-span-2 sm:col-span-1">
-                                <div className="text-xl sm:text-2xl font-bold text-red-800">{snapshots[currentReportIndex].tasks_data.blocked_tasks?.length || 0}</div>
+                                <div className="text-xl sm:text-2xl font-bold text-red-800">{currentSnapshot.tasks_data.blocked_tasks?.length || 0}</div>
                                 <div className="text-xs sm:text-sm font-medium text-red-700">Blocked</div>
                               </div>
                             </div>
 
                             {/* Task Details */}
-                            {snapshots[currentReportIndex].tasks_data.completed_tasks?.length > 0 && (
+                            {currentSnapshot.tasks_data.completed_tasks && currentSnapshot.tasks_data.completed_tasks.length > 0 && (
                               <div className="mb-4">
                                 <h4 className="font-medium text-green-800 mb-3 flex items-center">
                                   <span className="w-2 h-2 bg-green-500 rounded-full mr-3"></span>
                                   Completed This Week
                                 </h4>
                                 <div className="space-y-2">
-                                  {snapshots[currentReportIndex].tasks_data.completed_tasks.slice(0, 3).map((task: any, index: number) => (
+                                  {currentSnapshot.tasks_data.completed_tasks.slice(0, 3).map((task: any, index: number) => (
                                     <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg border border-green-100">
                                       <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -656,9 +660,9 @@ function ClientPortalContent() {
                                       </div>
                                     </div>
                                   ))}
-                                  {snapshots[currentReportIndex].tasks_data.completed_tasks.length > 3 && (
+                                  {currentSnapshot.tasks_data.completed_tasks.length > 3 && (
                                     <p className="text-sm text-gray-500 text-center">
-                                      +{snapshots[currentReportIndex].tasks_data.completed_tasks.length - 3} more completed
+                                      +{currentSnapshot.tasks_data.completed_tasks.length - 3} more completed
                                     </p>
                                   )}
                                 </div>
@@ -666,14 +670,14 @@ function ClientPortalContent() {
                             )}
 
                             {/* Next Steps */}
-                            {snapshots[currentReportIndex].tasks_data.in_progress_tasks?.length > 0 && (
+                            {currentSnapshot.tasks_data.in_progress_tasks && currentSnapshot.tasks_data.in_progress_tasks.length > 0 && (
                               <div>
                                 <h4 className="font-medium text-blue-800 mb-3 flex items-center">
                                   <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
                                   Currently Working On
                                 </h4>
                                 <div className="space-y-2">
-                                  {snapshots[currentReportIndex].tasks_data.in_progress_tasks.slice(0, 2).map((task: any, index: number) => (
+                                  {currentSnapshot.tasks_data.in_progress_tasks.slice(0, 2).map((task: any, index: number) => (
                                     <div key={index} className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-100">
                                       <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                                         <div className="w-2 h-2 bg-white rounded-full"></div>
@@ -692,25 +696,25 @@ function ClientPortalContent() {
                         )}
 
                         {/* Key Information */}
-                        {(snapshots[currentReportIndex].tasks_data.upcoming_milestones || snapshots[currentReportIndex].tasks_data.next_steps) && (
+                          {(currentSnapshot.tasks_data.upcoming_milestones || currentSnapshot.tasks_data.next_steps) && (
                           <div className="grid md:grid-cols-2 gap-6">
-                            {snapshots[currentReportIndex].tasks_data.upcoming_milestones && (
+                            {currentSnapshot.tasks_data.upcoming_milestones && (
                               <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-3">Upcoming Milestones</h3>
-                                <p className="text-gray-700 leading-relaxed">{snapshots[currentReportIndex].tasks_data.upcoming_milestones}</p>
+                                <p className="text-gray-700 leading-relaxed">{currentSnapshot.tasks_data.upcoming_milestones}</p>
                               </div>
                             )}
-                            {snapshots[currentReportIndex].tasks_data.next_steps && (
+                            {currentSnapshot.tasks_data.next_steps && (
                               <div>
                                 <h3 className="text-lg font-medium text-gray-900 mb-3">Next Steps</h3>
-                                <p className="text-gray-700 leading-relaxed">{snapshots[currentReportIndex].tasks_data.next_steps}</p>
+                                <p className="text-gray-700 leading-relaxed">{currentSnapshot.tasks_data.next_steps}</p>
                               </div>
                             )}
                           </div>
                         )}
 
                         {/* Risks/Blockers if any */}
-                        {snapshots[currentReportIndex].tasks_data.risks_and_blockers && (
+                          {currentSnapshot.tasks_data.risks_and_blockers && (
                           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                             <h3 className="text-lg font-medium text-amber-800 mb-2 flex items-center">
                               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -718,11 +722,12 @@ function ClientPortalContent() {
                               </svg>
                               Attention Needed
                             </h3>
-                            <p className="text-amber-800 leading-relaxed">{snapshots[currentReportIndex].tasks_data.risks_and_blockers}</p>
+                            <p className="text-amber-800 leading-relaxed">{currentSnapshot.tasks_data.risks_and_blockers}</p>
                           </div>
                         )}
-                      </div>
-                    )}
+                        </div>
+                      )
+                    })()}
                   </div>
                   
                   {/* Tesla-Style Timeline Scrubber */}
