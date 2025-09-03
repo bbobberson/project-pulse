@@ -41,7 +41,7 @@ interface TaskUpdate {
 export default function UpdatePulse() {
   const router = useRouter()
   const params = useParams()
-  const projectId = params.projectId as string
+  const projectId = params?.projectId as string
   
   const [project, setProject] = useState<Project | null>(null)
   const [currentWeekTasks, setCurrentWeekTasks] = useState<RoadmapTask[]>([])

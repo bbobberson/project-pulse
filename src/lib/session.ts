@@ -27,7 +27,16 @@ export async function createSession(data: SessionData): Promise<string> {
 export async function verifySession(token: string): Promise<SessionData | null> {
   try {
     const { payload } = await jwtVerify(token, key)
-    return payload as SessionData
+    
+    // Extract only the SessionData properties from the JWT payload
+    if (payload.user && payload.pmUser) {
+      return {
+        user: payload.user as User,
+        pmUser: payload.pmUser as PMUser
+      }
+    }
+    
+    return null
   } catch (err) {
     return null
   }
@@ -35,7 +44,7 @@ export async function verifySession(token: string): Promise<SessionData | null> 
 
 export async function setSessionCookie(sessionData: SessionData) {
   const token = await createSession(sessionData)
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   
   cookieStore.set('session', token, {
     httpOnly: true,
@@ -46,7 +55,7 @@ export async function setSessionCookie(sessionData: SessionData) {
 }
 
 export async function getSessionFromCookie(): Promise<SessionData | null> {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
   const token = cookieStore.get('session')?.value
   
   if (!token) {
@@ -56,7 +65,7 @@ export async function getSessionFromCookie(): Promise<SessionData | null> {
   return verifySession(token)
 }
 
-export function clearSessionCookie() {
-  const cookieStore = cookies()
+export async function clearSessionCookie() {
+  const cookieStore = await cookies()
   cookieStore.delete('session')
 }

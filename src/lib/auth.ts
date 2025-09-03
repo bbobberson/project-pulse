@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs'
-import { supabaseAuth } from './supabase-auth'
+import { supabaseAuth } from './supabase-server'
 
 export interface User {
   id: string

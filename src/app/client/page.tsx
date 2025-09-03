@@ -617,9 +617,9 @@ function ClientPortalContent() {
                           )}
 
                           {/* Progress Overview */}
-                          {(currentSnapshot.tasks_data.completed_tasks?.length! > 0 || 
-                            currentSnapshot.tasks_data.in_progress_tasks?.length! > 0 || 
-                            currentSnapshot.tasks_data.blocked_tasks?.length! > 0) && (
+                          {((currentSnapshot.tasks_data.completed_tasks?.length || 0) > 0 || 
+                            (currentSnapshot.tasks_data.in_progress_tasks?.length || 0) > 0 || 
+                            (currentSnapshot.tasks_data.blocked_tasks?.length || 0) > 0) && (
                           <div>
                             <h3 className="text-lg font-medium text-gray-900 mb-4">Progress This Week</h3>
                             

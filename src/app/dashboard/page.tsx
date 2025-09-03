@@ -42,6 +42,7 @@ export default function Dashboard() {
   
   // 🚀 DASHBOARD MODE STATE
   const [dashboardMode, setDashboardMode] = useState<'present' | 'future'>('present')
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   useEffect(() => {
     async function fetchProjects() {
@@ -152,7 +153,7 @@ export default function Dashboard() {
 
   // 🌌 REVOLUTIONARY SPATIAL LAYOUT CALCULATION - STABLE POSITIONS
   const calculateSpatialPosition = (index: number, total: number) => {
-    if (!isClient) return { x: 0, y: 0, scale: 1, rotation: 0 }
+    if (typeof window === 'undefined') return { x: 0, y: 0, scale: 1, rotation: 0 }
     
     const centerX = window.innerWidth / 2
     const centerY = window.innerHeight / 2
@@ -172,7 +173,7 @@ export default function Dashboard() {
 
   // 🎯 PROXIMITY DETECTION FOR HOVER EFFECTS
   const calculateProximity = (cardX: number, cardY: number) => {
-    if (!isClient) return { distance: 999, isClose: false, magneticPull: 0 }
+    if (typeof window === 'undefined') return { distance: 999, isClose: false, magneticPull: 0 }
     
     const dx = mousePosition.x - cardX
     const dy = mousePosition.y - cardY

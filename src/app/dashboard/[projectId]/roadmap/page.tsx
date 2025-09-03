@@ -205,7 +205,7 @@ function WeekColumn({
 export default function ProjectRoadmap() {
   const router = useRouter()
   const params = useParams()
-  const projectId = params.projectId as string
+  const projectId = params?.projectId as string
   
   const [project, setProject] = useState<Project | null>(null)
   const [taskTemplates, setTaskTemplates] = useState<TaskTemplate[]>([])

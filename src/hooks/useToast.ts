@@ -6,7 +6,7 @@ export interface Toast {
   id: string
   message: string
   type: 'success' | 'error' | 'info' | 'warning'
-  duration?: number
+  duration: number
 }
 
 export function useToast() {
@@ -41,19 +41,19 @@ export function useToast() {
   }, [])
 
   const success = useCallback((message: string, duration?: number) => {
-    return addToast({ message, type: 'success', duration })
+    return addToast({ message, type: 'success', duration: duration ?? 3000 })
   }, [addToast])
 
   const error = useCallback((message: string, duration?: number) => {
-    return addToast({ message, type: 'error', duration })
+    return addToast({ message, type: 'error', duration: duration ?? 3000 })
   }, [addToast])
 
   const info = useCallback((message: string, duration?: number) => {
-    return addToast({ message, type: 'info', duration })
+    return addToast({ message, type: 'info', duration: duration ?? 3000 })
   }, [addToast])
 
   const warning = useCallback((message: string, duration?: number) => {
-    return addToast({ message, type: 'warning', duration })
+    return addToast({ message, type: 'warning', duration: duration ?? 3000 })
   }, [addToast])
 
   return {

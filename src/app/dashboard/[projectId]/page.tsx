@@ -33,7 +33,7 @@ interface ClientUser {
 export default function ProjectDetails() {
   const router = useRouter()
   const params = useParams()
-  const projectId = params.projectId as string
+  const projectId = params?.projectId as string
   
   const [loading, setLoading] = useState(true)
   const [project, setProject] = useState<Project | null>(null)
@@ -76,7 +76,7 @@ export default function ProjectDetails() {
       } else {
         const allMembers = new Set<string>()
         data?.forEach(project => {
-          if (project.team_members && Array.isArray(project.team_members)) {
+          if (project?.team_members && Array.isArray(project.team_members)) {
             project.team_members.forEach((member: string) => {
               if (member.trim()) allMembers.add(member.trim())
             })
@@ -205,9 +205,9 @@ export default function ProjectDetails() {
   }
 
   const selectTeamMemberSuggestion = (member: string) => {
-    const currentMembers = Array.isArray(project.team_members) 
+    const currentMembers = Array.isArray(project?.team_members) 
       ? project.team_members 
-      : project.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
+      : project?.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
     
     if (!currentMembers.includes(member)) {
       const newMembers = [...currentMembers, member]
@@ -220,9 +220,9 @@ export default function ProjectDetails() {
 
   const addTeamMemberFromInput = () => {
     if (teamMemberInput.trim()) {
-      const currentMembers = Array.isArray(project.team_members) 
+      const currentMembers = Array.isArray(project?.team_members) 
         ? project.team_members 
-        : project.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
+        : project?.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
       
       if (!currentMembers.includes(teamMemberInput.trim())) {
         const newMembers = [...currentMembers, teamMemberInput.trim()]
@@ -242,9 +242,9 @@ export default function ProjectDetails() {
       confirmText: 'Yes, Remove',
       dangerous: true,
       onConfirm: () => {
-        const currentMembers = Array.isArray(project.team_members) 
+        const currentMembers = Array.isArray(project?.team_members) 
           ? project.team_members 
-          : project.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
+          : project?.team_members?.split(',').map(m => m.trim()).filter(Boolean) || []
         
         const newMembers = currentMembers.filter(member => member !== memberToRemove)
         handleFieldSave('team_members', newMembers)
@@ -527,7 +527,7 @@ export default function ProjectDetails() {
                   <div className="space-y-3">
                     {/* Current Team Members as Tags */}
                     <div className="flex flex-wrap gap-2">
-                      {(Array.isArray(project.team_members) ? project.team_members : []).map((member, index) => (
+                      {(Array.isArray(project?.team_members) ? project?.team_members : []).map((member, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
@@ -605,13 +605,13 @@ export default function ProjectDetails() {
                     <p className={`text-gray-900 font-medium flex-1 px-3 py-1 rounded transition-all ${
                       flashField === 'team_members' ? 'border-2 border-green-500 bg-green-50' : ''
                     }`}>
-                      {Array.isArray(project.team_members) && project.team_members.length > 0
-                        ? project.team_members.join(', ')
+                      {Array.isArray(project?.team_members) && project?.team_members?.length > 0
+                        ? project?.team_members.join(', ')
                         : <span className="text-gray-400 italic">Click to add team members</span>
                       }
                     </p>
                     <button
-                      onClick={() => handleFieldEdit('team_members', project.team_members)}
+                      onClick={() => handleFieldEdit('team_members', project?.team_members)}
                       className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors ml-3"
                       title="Manage team members"
                     >

@@ -33,7 +33,7 @@ interface ClientUser {
 export default function ClientAccessPage() {
   const router = useRouter()
   const params = useParams()
-  const projectId = params.projectId as string
+  const projectId = params?.projectId as string
 
   const [project, setProject] = useState<Project | null>(null)
   const [clientUsers, setClientUsers] = useState<ClientUser[]>([])
