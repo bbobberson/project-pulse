@@ -8,6 +8,8 @@ export async function POST(request: NextRequest) {
   try {
     const { projectId, weekNumber } = await request.json()
 
+    console.log('Received email notification request:', { projectId, weekNumber })
+
     if (!projectId || !weekNumber) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
     }
