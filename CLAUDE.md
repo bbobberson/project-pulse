@@ -474,3 +474,48 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 - **Project details**: Action buttons positioned above content cards, right-aligned to card width
 - **Client portal**: Single status display in Project Overview card header
 - **Header consistency**: Clean separation between navigation and content across all pages
+
+### Custom Domain Setup Guide
+
+**Domain Configuration Process:**
+
+**Step 1: Domain Selection**
+- Recommended: `pulse.rothman.fit` (subdomain of existing domain)
+- Benefits: Cost-effective, matches email domain branding, faster DNS propagation
+
+**Step 2: Vercel Configuration**
+1. Go to Vercel Dashboard → project-pulse → Settings → Domains
+2. Add domain: `pulse.rothman.fit`
+3. Vercel will provide DNS record details
+
+**Step 3: DNS Configuration (Namecheap)**
+- Type: CNAME
+- Host: `pulse`
+- Value: `cname.vercel-dns.com` (use exact value from Vercel)
+- TTL: Automatic (or 300 seconds)
+
+**Step 4: Environment Variable Updates**
+Update in Vercel Dashboard → Settings → Environment Variables:
+```bash
+NEXT_PUBLIC_BASE_URL=https://pulse.rothman.fit
+```
+Redeploy after updating environment variables.
+
+**Step 5: Supabase Auth Configuration**
+Update in Supabase Dashboard → Authentication → URL Configuration:
+- Site URL: `https://pulse.rothman.fit`
+- Redirect URLs: 
+  - `https://pulse.rothman.fit/auth/callback`
+  - `https://pulse.rothman.fit/auth/reset-password-callback`
+
+**Step 6: Verification & Testing**
+- DNS propagation can take 15 minutes to 24 hours
+- Test password reset emails use new domain
+- Verify client access tokens generate correct URLs
+- SSL certificate automatically provisioned by Vercel
+
+**Professional Benefits:**
+- Professional URL replaces `project-pulse-flax.vercel.app`
+- Brand consistency with `send.rothman.fit` email domain
+- Enhanced client trust and professional appearance
+- SEO benefits with custom domain authority
