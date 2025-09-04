@@ -81,47 +81,118 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 
 ### Deployment
 
-**Production Deployment Process:**
-1. **Code Deployment:**
+**Complete Dev/Prod Deployment Process:**
+
+#### Environment Setup
+**Development Environment:**
+- Supabase project: `project-pulse` (wryhewzgpfzfkarxiwrc.supabase.co)
+- Environment: `.env.local` file with dev credentials
+- URL: `http://localhost:3000` (or 3001+ if port occupied)
+
+**Production Environment:**
+- Supabase project: `project-pulse-prod` (xuwzohxgnyvbijpuipkh.supabase.co) 
+- Environment: Vercel environment variables
+- URL: `https://project-pulse-flax.vercel.app`
+
+#### Production Deployment Process
+
+1. **Database Schema Sync (CRITICAL FIRST STEP):**
+   ```sql
+   -- In production Supabase SQL Editor, run:
+   -- 1. safe_production_migration.sql (creates all tables and schema)
+   -- 2. Any additional migration files as needed
+   ```
+
+2. **Vercel Environment Variables (Required):**
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://xuwzohxgnyvbijpuipkh.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=[prod anon key]
+   SUPABASE_SERVICE_ROLE_KEY=[prod service role key]
+   RESEND_API_KEY=re_JD9CqKw6_CwFxee8pckehyuirQD7QT9rD
+   NEXT_PUBLIC_BASE_URL=https://project-pulse-flax.vercel.app
+   ```
+
+3. **Supabase Auth Configuration (Production):**
+   - Site URL: `https://project-pulse-flax.vercel.app`
+   - Redirect URLs: 
+     - `https://project-pulse-flax.vercel.app/auth/reset-password-callback`
+     - `https://project-pulse-flax.vercel.app/auth/login`
+     - `https://project-pulse-flax.vercel.app/**`
+
+4. **Code Deployment:**
    ```bash
    # Commit changes
    git add .
    git commit -m "description of changes"
    git push origin main
    
-   # Tag for deployment
+   # Tag for deployment (triggers GitHub Actions)
    git tag v2.1.X  # increment version number
    git push origin v2.1.X
    ```
 
-2. **Database Migration (CRITICAL):**
-   - Production database schema MUST match development schema
-   - Apply migrations in production Supabase SQL Editor before deploying code
-   - Use `safe_production_migration.sql` for schema updates
-   - **NEVER deploy without syncing database schema first**
+5. **Manual Deployment (if GitHub Actions fails):**
+   - Go to Vercel Dashboard → project-pulse → Deployments
+   - Click "Redeploy" on latest deployment
+   - Ensure it uses latest commit from main branch
 
-3. **Environment Variables (Production Vercel):**
-   ```
-   RESEND_API_KEY=re_JD9CqKw6_CwFxee8pckehyuirQD7QT9rD
-   NEXT_PUBLIC_BASE_URL=https://project-pulse-flax.vercel.app
-   ```
+#### Email System Configuration
+**Resend Setup:**
+- Domain: `send.rothman.fit` (subdomain approach required)
+- From address: `pulse@send.rothman.fit`
+- DNS records configured in Namecheap for domain verification
 
-4. **GitHub Actions Workflow:**
-   - File: `.github/workflows/deploy-prod.yml`
-   - Triggers on git tags matching `v*` pattern
-   - **Known Issue**: Workflow uses `npm` but project uses `pnpm` - may need manual Vercel deployment
-   - Monitor at: `https://github.com/bbobberson/project-pulse/actions`
+**Email Flow:**
+- Pulse updates automatically generate fresh client access tokens
+- Emails sent with secure portal links using new tokens
+- Rate limiting: 600ms delay between emails (respects 2 req/sec limit)
 
-**Production URLs:**
-- Main app: `https://project-pulse-flax.vercel.app`
-- Vercel Dashboard: Access via GitHub integration
+#### Database Management Philosophy
+**Separate Databases:**
+- **Development**: For testing, development, and experimentation
+- **Production**: For live client data and real project management
 
-**Database Management:**
-- Dev: Supabase project (wryhewzgpfzfkarxiwrc)
-- Production: Separate Supabase project  
-- **CRITICAL**: Always run database migrations before code deployment
-- Manual SQL migrations (no automated migration system)
-- Use `safe_production_migration.sql` for safe schema updates
+**Migration Process:**
+1. Develop and test schema changes in dev database
+2. Apply tested migrations to production database via SQL Editor
+3. Deploy code that uses the updated schema
+4. **NEVER deploy code without database schema being in sync**
+
+**Key Tables:**
+- `projects` - Project data (id field is TEXT type, not UUID)
+- `client_users` - Client contact info with email notification preferences  
+- `client_access_tokens` - Secure tokens for client portal access
+- `weekly_snapshots` - Pulse update data and progress reports
+- `project_roadmap` - Task management and milestone tracking
+
+#### Troubleshooting Common Issues
+**Email API Returns 404:**
+1. Verify Vercel deployment completed successfully
+2. Check all Supabase environment variables match production project
+3. Confirm database migration applied (check for `client_users` table)
+
+**Token Generation Fails:**
+1. Check `client_users` table exists with proper schema
+2. Verify `email_notifications: true` for target project clients
+3. Ensure `client_name` field is not null in token creation
+
+**Database Connection Issues:**
+1. Verify production Supabase URLs and keys in Vercel env vars
+2. Check RLS policies allow proper access
+3. Confirm service role key has necessary permissions
+
+#### Deployment History
+- v2.1.3: Fixed TypeScript compilation errors
+- v2.1.4: Added email notification system
+- v2.1.5: Manual deployment workflow
+- v2.1.6: Automatic token generation during pulse updates  
+- v2.1.7: Fixed client_name field in token creation API
+
+**GitHub Actions Status:**
+- File: `.github/workflows/deploy-prod.yml`  
+- **Known Issue**: Uses `npm` but project uses `pnpm`
+- Fallback: Manual Vercel deployment via dashboard
+- Monitor: `https://github.com/bbobberson/project-pulse/actions`
 
 ### Data Flow Patterns
 
