@@ -66,14 +66,14 @@ export default function ConfirmDialog({
             <button
               onClick={onCancel}
               disabled={loading}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
             >
               {cancelText}
             </button>
             <button
               onClick={onConfirm}
               disabled={loading}
-              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 ${
+              className={`flex-1 px-4 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed ${
                 dangerous 
                   ? 'bg-red-600 text-white hover:bg-red-700' 
                   : 'btn-primary'

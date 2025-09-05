@@ -556,18 +556,6 @@ export default function NewProject() {
                     </button>
                   </div>
                 </div>
-                <div className="flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    id="email-notifications"
-                    checked={newUser.email_notifications}
-                    onChange={(e) => setNewUser(prev => ({ ...prev, email_notifications: e.target.checked }))}
-                    className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <label htmlFor="email-notifications" className="ml-2 text-sm text-gray-600">
-                    Send email notifications for project updates
-                  </label>
-                </div>
               </div>
               
               {/* Client Users List */}
@@ -582,12 +570,6 @@ export default function NewProject() {
                             <p className="text-sm font-medium text-gray-900">{user.name || user.email}</p>
                             {user.name && <p className="text-sm text-gray-500">{user.email}</p>}
                           </div>
-                          {user.email_notifications && (
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                              <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
-                              Notifications
-                            </span>
-                          )}
                         </div>
                       </div>
                       <button

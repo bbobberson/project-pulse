@@ -92,7 +92,55 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
 **Production Environment:**
 - Supabase project: `project-pulse-prod` (xuwzohxgnyvbijpuipkh.supabase.co) 
 - Environment: Vercel environment variables
-- URL: `https://project-pulse-flax.vercel.app`
+- URL: `https://pulse.rothman.fit` (custom domain)
+
+#### Official Development Workflow
+
+**Development Classification:**
+
+**🔥 Hot Fixes (Same Day Deployment):**
+- Bug fixes that break functionality
+- Security patches  
+- Quick non-breaking feature additions (like beta signup)
+- Email/notification issues
+- Authentication problems
+
+**🚀 Feature Releases (Planned Deployments):**
+- New major features (dashboard modes, client portal changes)
+- UI/UX overhauls
+- Database schema changes
+- Integration of multiple features
+
+**Development Process (MANDATORY):**
+
+**Phase 1: Dev Environment Development**
+1. **All work starts in dev** (`localhost:3000` + dev Supabase database)
+2. **Database changes first**: Apply to dev database via Supabase SQL Editor
+3. **Code implementation**: Build feature/fix locally  
+4. **Local testing**: Ensure everything works in dev environment
+5. **User approval required**: User must test and approve before any commits
+
+**Phase 2: Database Sync (CRITICAL)**
+1. **After dev approval**: Apply same database migration to prod database
+2. **Schema verification**: Ensure both databases match exactly
+3. **No deployment until database sync complete**
+
+**Phase 3: Deployment**
+```bash
+# Commit approved changes
+git add .
+git commit -m "feat/fix: description" 
+git push origin main
+
+# Tag deployment (hot fix vs release)
+git tag v2.1.X-hotfix  # or v2.2.0 for releases  
+git push origin v2.1.X-hotfix
+```
+
+**Environment Rules:**
+- **Development**: Safe to break, experiment freely, reset data as needed
+- **Production**: Never develop directly in prod, database migrations must be tested in dev first
+- **Approval Gates**: Code works in dev ✅ → User approval ✅ → Database sync ✅ → Deploy ✅
 
 #### Production Deployment Process
 
@@ -109,15 +157,15 @@ Project Pulse is a project management dashboard built with Next.js 15, React 19,
    NEXT_PUBLIC_SUPABASE_ANON_KEY=[prod anon key]
    SUPABASE_SERVICE_ROLE_KEY=[prod service role key]
    RESEND_API_KEY=re_JD9CqKw6_CwFxee8pckehyuirQD7QT9rD
-   NEXT_PUBLIC_BASE_URL=https://project-pulse-flax.vercel.app
+   NEXT_PUBLIC_BASE_URL=https://pulse.rothman.fit
    ```
 
 3. **Supabase Auth Configuration (Production):**
-   - Site URL: `https://project-pulse-flax.vercel.app`
+   - Site URL: `https://pulse.rothman.fit`
    - Redirect URLs: 
-     - `https://project-pulse-flax.vercel.app/auth/reset-password-callback`
-     - `https://project-pulse-flax.vercel.app/auth/login`
-     - `https://project-pulse-flax.vercel.app/**`
+     - `https://pulse.rothman.fit/auth/reset-password-callback`
+     - `https://pulse.rothman.fit/auth/login`
+     - `https://pulse.rothman.fit/**`
 
 4. **Code Deployment:**
    ```bash
@@ -515,7 +563,54 @@ Update in Supabase Dashboard → Authentication → URL Configuration:
 - SSL certificate automatically provisioned by Vercel
 
 **Professional Benefits:**
-- Professional URL replaces `project-pulse-flax.vercel.app`
+- **Professional URL**: `https://pulse.rothman.fit` (replaces `project-pulse-flax.vercel.app`)
 - Brand consistency with `send.rothman.fit` email domain
 - Enhanced client trust and professional appearance
 - SEO benefits with custom domain authority
+
+### Beta Interest Capture System
+
+**Lead Generation Feature:**
+- Subtle "Interested in early access?" link on login page
+- Inline email capture without popups or modals
+- Professional Tesla-inspired styling consistent with brand
+- Automatic email notifications to admin with lead details
+
+**Implementation:**
+- API route: `/api/beta-interest` for processing signups
+- Database table: `beta_signups` with email, timestamp, and source tracking
+- Duplicate email handling with friendly user messaging
+- Integration with existing Resend email infrastructure
+
+**Business Benefits:**
+- Converts login page into lead generation opportunity
+- Captures qualified prospects who found the professional domain
+- Uses existing email system for immediate notifications
+- Zero ongoing maintenance with simple database storage
+
+### Project Completion System
+
+**Complete/Archive Functionality:**
+- **Complete Project**: Manual PM process for project close-out with custom executive summary
+- **Archive Project**: For mistakes or inactive clients, removes from UI entirely but keeps in database
+- **Read-only behavior**: Completed projects become read-only (no editing, no pulse updates) until reactivated
+- **Reversible completion**: Completed projects can be reactivated to active status
+
+**Custom Completion Modal:**
+- **Required executive summary**: PMs must write personalized completion messages for clients
+- **No default fallbacks**: Eliminates generic robot messages entirely
+- **Professional styling**: Tesla-inspired modal with green checkmark icon and clear validation
+- **Integration flow**: Custom message flows through completion snapshot to client email notification
+
+**API Implementation:**
+- Route: `/api/projects/[projectId]/complete` (PATCH for complete, PUT for reactivate)
+- Accepts `executiveSummary` parameter in request body
+- Creates completion snapshot in `weekly_snapshots` with custom executive summary
+- Generates fresh client access tokens for final notification
+- Automatic email delivery to clients with personalized completion message
+
+**UI Components:**
+- `CompleteProjectModal.tsx` - Custom completion modal with required text input
+- Project status transitions: active → completed (reversible) or active → archived (permanent)
+- Dashboard filtering: Defaults to "Active" filter with proper status hierarchy
+- Read-only states applied across all project management interfaces

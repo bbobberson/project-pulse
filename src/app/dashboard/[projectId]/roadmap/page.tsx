@@ -30,6 +30,7 @@ interface Project {
   client_name: string
   start_date: string
   end_date: string | null
+  overall_status: string
 }
 
 interface TaskTemplate {
@@ -56,7 +57,7 @@ interface RoadmapTask {
 }
 
 // Draggable Task Template Component
-function DraggableTaskTemplate({ template }: { template: TaskTemplate }) {
+function DraggableTaskTemplate({ template, isReadOnly }: { template: TaskTemplate, isReadOnly: boolean }) {
   const {
     attributes,
     listeners,
@@ -83,8 +84,12 @@ function DraggableTaskTemplate({ template }: { template: TaskTemplate }) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className="p-4 bg-white border border-gray-200 rounded-xl cursor-grab hover:bg-gray-50 hover:border-gray-300 transition-all hover:shadow-sm"
+      {...(isReadOnly ? {} : listeners)}
+      className={`p-4 bg-white border border-gray-200 rounded-xl transition-all ${
+        isReadOnly 
+          ? 'cursor-default opacity-60' 
+          : 'cursor-grab hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm'
+      }`}
     >
       <div className="font-medium text-sm text-gray-900">{template.name}</div>
       <div className="text-xs text-gray-500 mt-1">{template.estimated_hours}h • {template.category}</div>
@@ -97,12 +102,14 @@ function WeekColumn({
   weekNumber, 
   tasks, 
   onUpdateTaskStatus, 
-  onDeleteTask 
+  onDeleteTask,
+  isReadOnly
 }: { 
   weekNumber: number
   tasks: RoadmapTask[]
   onUpdateTaskStatus: (taskId: string, status: string) => void
   onDeleteTask: (taskId: string) => void
+  isReadOnly: boolean
 }) {
   const {
     setNodeRef,
@@ -133,10 +140,12 @@ function WeekColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`min-h-[300px] p-6 bg-gray-50 rounded-2xl border-2 border-dashed transition-all ${
-        isOver 
-          ? 'border-blue-400 bg-blue-50 shadow-lg' 
-          : 'border-gray-300 hover:border-gray-400'
+      className={`min-h-[300px] p-6 rounded-2xl border-2 border-dashed transition-all ${
+        isReadOnly
+          ? 'bg-gray-100 border-gray-200 opacity-60'
+          : isOver 
+            ? 'bg-blue-50 border-blue-400 shadow-lg' 
+            : 'bg-gray-50 border-gray-300 hover:border-gray-400'
       }`}
     >
       <h3 className="font-semibold text-gray-900 mb-3">Week {weekNumber}</h3>
@@ -164,19 +173,26 @@ function WeekColumn({
                   )}
                 </div>
               </div>
-              <button
-                onClick={() => onDeleteTask(task.id)}
-                className="text-red-500 hover:text-red-700 text-xs"
-              >
-                ✕
-              </button>
+              {!isReadOnly && (
+                <button
+                  onClick={() => onDeleteTask(task.id)}
+                  className="text-red-500 hover:text-red-700 text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
             </div>
             
             <div className="flex items-center justify-between">
               <select
                 value={task.status}
-                onChange={(e) => onUpdateTaskStatus(task.id, e.target.value)}
-                className={`text-xs px-3 py-2 rounded-xl border-0 font-medium cursor-pointer transition-all hover:shadow-sm ${getStatusColor(task.status)}`}
+                onChange={(e) => !isReadOnly && onUpdateTaskStatus(task.id, e.target.value)}
+                disabled={isReadOnly}
+                className={`text-xs px-3 py-2 rounded-xl border-0 font-medium transition-all ${
+                  isReadOnly 
+                    ? 'cursor-default opacity-60' 
+                    : 'cursor-pointer hover:shadow-sm'
+                } ${getStatusColor(task.status)}`}
               >
                 <option value="not-started">Not Started</option>
                 <option value="in-progress">In Progress</option>
@@ -245,7 +261,7 @@ export default function ProjectRoadmap() {
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, name, client_name, start_date, end_date')
+        .select('id, name, client_name, start_date, end_date, overall_status')
         .eq('id', projectId)
         .single()
       
@@ -456,6 +472,9 @@ export default function ProjectRoadmap() {
   const projectWeeks = calculateProjectWeeks()
   const maxWeek = Math.max(projectWeeks, ...Object.keys(tasksByWeek).map(Number))
   const weeks = Array.from({ length: maxWeek }, (_, i) => i + 1)
+  
+  // Check if project is completed (read-only mode)
+  const isReadOnly = project?.overall_status === 'completed'
 
   if (loading) {
     return (
@@ -482,7 +501,11 @@ export default function ProjectRoadmap() {
   }
 
   return (
-    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+    <DndContext 
+      sensors={isReadOnly ? [] : sensors} 
+      onDragStart={isReadOnly ? undefined : handleDragStart} 
+      onDragEnd={isReadOnly ? undefined : handleDragEnd}
+    >
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
@@ -516,17 +539,26 @@ export default function ProjectRoadmap() {
         {/* Main Content */}
         <div className="flex h-[calc(100vh-140px)]">
           {/* Task Library Sidebar */}
-          <div className="w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Task Library</h2>
+          <div className={`w-80 bg-white border-r border-gray-200 p-6 overflow-y-auto ${
+            isReadOnly ? 'opacity-60' : ''
+          }`}>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Task Library {isReadOnly && <span className="text-sm text-gray-500 font-normal">(Read-Only)</span>}
+            </h2>
             
             {/* Search Input */}
             <div className="mb-4">
               <input
                 type="text"
-                placeholder="Search tasks..."
+                placeholder={isReadOnly ? "Search tasks (read-only)..." : "Search tasks..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500 text-sm transition-all"
+                disabled={isReadOnly}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl text-sm transition-all ${
+                  isReadOnly 
+                    ? 'bg-gray-100 text-gray-500 cursor-default' 
+                    : 'focus:ring-2 focus:ring-gray-400 focus:border-transparent bg-white text-gray-900 placeholder-gray-500'
+                }`}
               />
             </div>
             
@@ -555,7 +587,7 @@ export default function ProjectRoadmap() {
                     >
                       <div className="space-y-2 mt-3 ml-2">
                         {templates.map((template) => (
-                          <DraggableTaskTemplate key={template.id} template={template} />
+                          <DraggableTaskTemplate key={template.id} template={template} isReadOnly={isReadOnly} />
                         ))}
                       </div>
                     </SortableContext>
@@ -568,9 +600,23 @@ export default function ProjectRoadmap() {
           {/* Timeline */}
           <div className="flex-1 p-6 overflow-x-auto">
             <div className="mb-4">
-              <p className="text-sm text-gray-600 font-medium">
-                Drag tasks from library to timeline →
-              </p>
+              {isReadOnly ? (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex items-center">
+                    <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    <div>
+                      <p className="text-sm font-medium text-blue-800">Read-Only Mode</p>
+                      <p className="text-xs text-blue-600 mt-1">This project is completed. Reactivate the project to make changes.</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600 font-medium">
+                  Drag tasks from library to timeline →
+                </p>
+              )}
             </div>
             <div className="flex space-x-6 min-w-max">
               {weeks.map((weekNumber) => (
@@ -581,6 +627,7 @@ export default function ProjectRoadmap() {
                       tasks={tasksByWeek[weekNumber] || []}
                       onUpdateTaskStatus={updateTaskStatus}
                       onDeleteTask={deleteTask}
+                      isReadOnly={isReadOnly}
                     />
                   </SortableContext>
                 </div>

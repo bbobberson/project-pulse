@@ -37,7 +37,7 @@ export default function PresentModeDashboard({
 }: PresentModeDashboardProps) {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('active')
   const [loadingButton, setLoadingButton] = useState<string | null>(null)
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
   const [selectedCardIndex, setSelectedCardIndex] = useState(0)
@@ -62,9 +62,28 @@ export default function PresentModeDashboard({
 
   // Filter projects based on search and status
   const filteredProjects = projects.filter(project => {
+    // Always exclude archived projects from UI (per requirements)
+    if (project.overall_status === 'archived') {
+      return false
+    }
+    
     const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          project.client_name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || project.overall_status === statusFilter
+    
+    // Handle status filtering with new logic
+    let matchesStatus = false
+    if (statusFilter === 'all') {
+      matchesStatus = true // Show all non-archived
+    } else if (statusFilter === 'active') {
+      // Active projects are on-track, at-risk, or off-track
+      matchesStatus = ['on-track', 'at-risk', 'off-track'].includes(project.overall_status)
+    } else if (statusFilter === 'completed') {
+      matchesStatus = project.overall_status === 'completed'
+    } else {
+      // Direct status match (legacy support)
+      matchesStatus = project.overall_status === statusFilter
+    }
+    
     return matchesSearch && matchesStatus
   })
 
@@ -221,7 +240,9 @@ export default function PresentModeDashboard({
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full px-4 py-3 pr-10 border border-gray-300 rounded-xl focus-brand bg-white text-gray-900 text-base cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236B7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22M6%208l4%204%204-4%22/%3E%3C/svg%3E')] bg-[length:16px_16px] bg-[right_12px_center] bg-no-repeat transition-all"
               >
-                <option value="all">Show All</option>
+                <option value="active">Active</option>
+                <option value="completed">Completed</option>
+                <option disabled>──────────</option>
                 <option value="on-track">On Track</option>
                 <option value="at-risk">At Risk</option>
                 <option value="off-track">Off Track</option>
@@ -363,6 +384,8 @@ export default function PresentModeDashboard({
                             ? 'bg-yellow-100 text-yellow-800'
                             : project.overall_status === 'off-track'
                             ? 'bg-red-100 text-red-800'
+                            : project.overall_status === 'completed'
+                            ? 'bg-blue-100 text-blue-800'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
                           {project.overall_status.replace('-', ' ')}
@@ -386,26 +409,28 @@ export default function PresentModeDashboard({
 
                     {/* Quick Actions */}
                     <div className="flex justify-start">
-                      <motion.button 
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleNavigation(`/dashboard/${project.id}/update-pulse`, `pulse-${project.id}`)
-                        }}
-                        disabled={loadingButton === `pulse-${project.id}`}
-                        style={{ backgroundColor: '#1C2B45' }}
-                        className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1 sm:space-x-2 w-full sm:w-auto"
-                      >
-                        {loadingButton === `pulse-${project.id}` ? (
-                          <div className="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                        ) : (
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                          </svg>
-                        )}
-                        <span>Update Pulse</span>
-                      </motion.button>
+                      {project.overall_status !== 'completed' && (
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleNavigation(`/dashboard/${project.id}/update-pulse`, `pulse-${project.id}`)
+                          }}
+                          disabled={loadingButton === `pulse-${project.id}`}
+                          style={{ backgroundColor: '#1C2B45' }}
+                          className="px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg sm:rounded-xl hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-50 flex items-center justify-center space-x-1 sm:space-x-2 w-full sm:w-auto"
+                        >
+                          {loadingButton === `pulse-${project.id}` ? (
+                            <div className="animate-spin h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent rounded-full"></div>
+                          ) : (
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                          )}
+                          <span>Update Pulse</span>
+                        </motion.button>
+                      )}
                     </div>
                   </div>
                 </motion.div>

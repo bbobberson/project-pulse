@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase-browser'
 import InfoWorksLogo from '@/components/InfoWorksLogo'
 import ClientTokenManager from '@/components/ClientTokenManager'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import CompleteProjectModal from '@/components/CompleteProjectModal'
 
 interface Project {
   id: string
@@ -48,6 +49,9 @@ export default function ProjectDetails() {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null)
+  const [showCompleteConfirm, setShowCompleteConfirm] = useState(false)
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
   const [flashField, setFlashField] = useState<string | null>(null)
   const [confirmDialog, setConfirmDialog] = useState({
     isOpen: false,
@@ -139,6 +143,11 @@ export default function ProjectDetails() {
   }
 
   const handleFieldEdit = (fieldName: string, currentValue: any) => {
+    // Don't allow editing for completed projects
+    if (project?.overall_status === 'completed') {
+      return
+    }
+    
     setEditingField(fieldName)
     setEditValue(Array.isArray(currentValue) ? currentValue.join(', ') : currentValue || '')
   }
@@ -254,7 +263,90 @@ export default function ProjectDetails() {
     })
   }
 
+  // Handle Complete Project
+  const handleCompleteProject = async (executiveSummary?: string) => {
+    setActionLoading(true)
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}/complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ executiveSummary })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setProject(prev => prev ? { ...prev, overall_status: 'completed' } : null)
+        showToast(data.message, 'success')
+        setShowCompleteConfirm(false)
+      } else {
+        showToast(data.error || 'Failed to complete project', 'error')
+      }
+    } catch (error) {
+      console.error('Error completing project:', error)
+      showToast('Network error. Please try again.', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
+  // Handle Archive Project
+  const handleArchiveProject = async () => {
+    setActionLoading(true)
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}/archive`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        showToast(data.message, 'success')
+        setShowArchiveConfirm(false)
+        // Redirect to dashboard since archived projects are hidden from UI
+        setTimeout(() => {
+          router.push('/dashboard')
+        }, 2000)
+      } else {
+        showToast(data.error || 'Failed to archive project', 'error')
+      }
+    } catch (error) {
+      console.error('Error archiving project:', error)
+      showToast('Network error. Please try again.', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  // Handle Reactivate Completed Project
+  const handleReactivateProject = async () => {
+    setActionLoading(true)
+    
+    try {
+      const response = await fetch(`/api/projects/${projectId}/complete`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reactivate: true })
+      })
+      
+      const data = await response.json()
+      
+      if (data.success) {
+        setProject(prev => prev ? { ...prev, overall_status: 'on-track' } : null)
+        showToast(data.message, 'success')
+      } else {
+        showToast(data.error || 'Failed to reactivate project', 'error')
+      }
+    } catch (error) {
+      console.error('Error reactivating project:', error)
+      showToast('Network error. Please try again.', 'error')
+    } finally {
+      setActionLoading(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -319,58 +411,82 @@ export default function ProjectDetails() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Action Buttons - Right aligned to card */}
+{/* Primary Action Buttons */}
         <div className="max-w-4xl mx-auto mb-6">
-          <div className="flex justify-end space-x-4">
-            <motion.button
-              onClick={() => router.push(`/dashboard/${projectId}/update-pulse`)}
-              className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all cursor-pointer font-medium"
-              style={{ backgroundColor: '#1C2B45' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Update Pulse
-            </motion.button>
-            
+          <div className="flex justify-end items-center space-x-4">
             <motion.button
               onClick={() => router.push(`/dashboard/${projectId}/roadmap`)}
-              className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer font-medium"
+              className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer font-medium"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 01.553-.894L9 2l6 3 6-3v15l-6 3-6-3z" />
               </svg>
-              Roadmap
+              View Roadmap
             </motion.button>
+            
+            {/* Hide Update Pulse button for completed projects */}
+            {project.overall_status !== 'completed' && (
+              <motion.button
+                onClick={() => router.push(`/dashboard/${projectId}/update-pulse`)}
+                className="flex items-center px-4 py-2 text-white rounded-lg hover:opacity-90 transition-all cursor-pointer font-medium"
+                style={{ backgroundColor: '#1C2B45' }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Update Pulse
+              </motion.button>
+            )}
           </div>
         </div>
 
+        {/* Completed Project Notice */}
+        {project.overall_status === 'completed' && (
+          <div className="max-w-4xl mx-auto mb-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-blue-800 font-medium">
+                  This project has been completed and is in read-only mode. 
+                  <span className="font-normal"> Reactivate the project below to enable editing and updates.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Project Information - Tesla Single Column Layout */}
-        <div className="space-y-12 max-w-4xl mx-auto mb-12">
+        <div className="space-y-8 max-w-4xl mx-auto mb-8">
           {/* Basic Information */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-8"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6"
           >
-            <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center justify-between mb-6">
               <h3 className="text-2xl font-bold text-gray-900">Project Information</h3>
               
               {/* Status Dropdown */}
               <div className="relative">
                 <motion.button
-                  onClick={() => setShowStatusDropdown(!showStatusDropdown)}
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity ${
+                  onClick={() => project.overall_status !== 'completed' && setShowStatusDropdown(!showStatusDropdown)}
+                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide whitespace-nowrap transition-opacity ${
+                    project.overall_status === 'completed' ? 'cursor-default' : 'cursor-pointer hover:opacity-80'
+                  } ${
                     project.overall_status === 'on-track'
                       ? 'bg-green-100 text-green-800'
                       : project.overall_status === 'at-risk'
                       ? 'bg-yellow-100 text-yellow-800'
                       : project.overall_status === 'off-track'
                       ? 'bg-red-100 text-red-800'
+                      : project.overall_status === 'completed'
+                      ? 'bg-blue-100 text-blue-800'
                       : 'bg-gray-100 text-gray-800'
                   }`}
                   whileHover={{ scale: 1.05 }}
@@ -384,7 +500,7 @@ export default function ProjectDetails() {
                 
                 {showStatusDropdown && (
                   <div className="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                    {['on-track', 'at-risk', 'off-track'].map((status) => (
+                    {['on-track', 'at-risk', 'off-track', 'completed'].map((status) => (
                       <button
                         key={status}
                         onClick={() => {
@@ -402,46 +518,50 @@ export default function ProjectDetails() {
                 )}
               </div>
             </div>
-            <div className="space-y-6">
-              <div>
-                <label className="text-gray-500 text-sm">Project Manager</label>
-                {editingField === 'pm_assigned' ? (
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') handleFieldSave('pm_assigned')
-                        if (e.key === 'Escape') handleFieldCancel()
-                      }}
-                      onBlur={() => handleFieldSave('pm_assigned')}
-                      className="flex-1 px-3 py-1 text-gray-900 font-medium bg-white border border-gray-300 rounded focus-brand"
-                      autoFocus
-                    />
-                    {saving ? (
-                      <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-                    ) : (
-                      <button
-                        onClick={() => handleFieldCancel()}
-                        className="text-gray-400 hover:text-gray-600 text-sm"
-                      >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  <p 
-                    onClick={() => handleFieldEdit('pm_assigned', project.pm_assigned)}
-                    className={`text-gray-900 font-medium hover:bg-gray-50 px-3 py-1 rounded cursor-pointer transition-all ${
-                      flashField === 'pm_assigned' ? 'border-2 border-green-500 bg-green-50' : ''
-                    }`}
-                  >
-                    {project.pm_assigned}
-                  </p>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-6">
+                <div>
+                  <label className="text-gray-500 text-sm">Project Manager</label>
+                  {editingField === 'pm_assigned' ? (
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleFieldSave('pm_assigned')
+                          if (e.key === 'Escape') handleFieldCancel()
+                        }}
+                        onBlur={() => handleFieldSave('pm_assigned')}
+                        className="flex-1 px-3 py-1 text-gray-900 font-medium bg-white border border-gray-300 rounded focus-brand"
+                        autoFocus
+                      />
+                      {saving ? (
+                        <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+                      ) : (
+                        <button
+                          onClick={() => handleFieldCancel()}
+                          className="text-gray-400 hover:text-gray-600 text-sm"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <p 
+                      onClick={() => handleFieldEdit('pm_assigned', project.pm_assigned)}
+                      className={`text-gray-900 font-medium px-3 py-1 rounded transition-all ${
+                        project.overall_status === 'completed' 
+                          ? 'cursor-default' 
+                          : 'hover:bg-gray-50 cursor-pointer'
+                      } ${
+                        flashField === 'pm_assigned' ? 'border-2 border-green-500 bg-green-50' : ''
+                      }`}
+                    >
+                      {project.pm_assigned}
+                    </p>
+                  )}
+                </div>
                 <div>
                   <label className="text-gray-500 text-sm">Start Date</label>
                   {editingField === 'start_date' ? (
@@ -472,7 +592,11 @@ export default function ProjectDetails() {
                   ) : (
                     <p 
                       onClick={() => handleFieldEdit('start_date', project.start_date)}
-                      className={`text-gray-900 font-medium hover:bg-gray-50 px-3 py-1 rounded cursor-pointer transition-all ${
+                      className={`text-gray-900 font-medium px-3 py-1 rounded transition-all ${
+                        project.overall_status === 'completed' 
+                          ? 'cursor-default' 
+                          : 'hover:bg-gray-50 cursor-pointer'
+                      } ${
                         flashField === 'start_date' ? 'border-2 border-green-500 bg-green-50' : ''
                       }`}
                     >
@@ -510,7 +634,11 @@ export default function ProjectDetails() {
                   ) : (
                     <p 
                       onClick={() => handleFieldEdit('end_date', project.end_date || '')}
-                      className={`text-gray-900 font-medium hover:bg-gray-50 px-3 py-1 rounded cursor-pointer transition-all ${
+                      className={`text-gray-900 font-medium px-3 py-1 rounded transition-all ${
+                        project.overall_status === 'completed' 
+                          ? 'cursor-default' 
+                          : 'hover:bg-gray-50 cursor-pointer'
+                      } ${
                         flashField === 'end_date' ? 'border-2 border-green-500 bg-green-50' : ''
                       }`}
                     >
@@ -612,8 +740,12 @@ export default function ProjectDetails() {
                     </p>
                     <button
                       onClick={() => handleFieldEdit('team_members', project?.team_members)}
-                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-colors ml-3"
-                      title="Manage team members"
+                      className={`p-1.5 text-gray-400 rounded transition-colors ml-3 ${
+                        project.overall_status === 'completed' 
+                          ? 'cursor-default' 
+                          : 'hover:text-gray-600 hover:bg-gray-50 cursor-pointer'
+                      }`}
+                      title={project.overall_status === 'completed' ? 'Read-only' : 'Manage team members'}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -654,7 +786,11 @@ export default function ProjectDetails() {
                   <div className="flex items-center space-x-2">
                     <p 
                       onClick={() => handleFieldEdit('onedrive_link', project.onedrive_link)}
-                      className={`text-gray-900 font-medium hover:bg-gray-50 px-3 py-1 rounded cursor-pointer transition-all flex-1 ${
+                      className={`text-gray-900 font-medium px-3 py-1 rounded transition-all flex-1 ${
+                        project.overall_status === 'completed' 
+                          ? 'cursor-default' 
+                          : 'hover:bg-gray-50 cursor-pointer'
+                      } ${
                         flashField === 'onedrive_link' ? 'border-2 border-green-500 bg-green-50' : ''
                       }`}
                     >
@@ -673,7 +809,11 @@ export default function ProjectDetails() {
                 ) : (
                   <p 
                     onClick={() => handleFieldEdit('onedrive_link', '')}
-                    className="text-gray-400 hover:bg-gray-50 px-3 py-1 rounded cursor-pointer transition-colors italic"
+                    className={`text-gray-400 px-3 py-1 rounded transition-colors italic ${
+                      project.overall_status === 'completed' 
+                        ? 'cursor-default' 
+                        : 'hover:bg-gray-50 cursor-pointer'
+                    }`}
                   >
                     Click to add OneDrive link
                   </p>
@@ -703,7 +843,7 @@ export default function ProjectDetails() {
                               user.is_active 
                                 ? 'bg-green-100 text-green-800 hover:bg-green-200'
                                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                            } transition-colors`}
+                            } transition-colors cursor-pointer`}
                           >
                             {user.is_active ? 'Active' : 'Inactive'}
                           </button>
@@ -715,7 +855,7 @@ export default function ProjectDetails() {
                                 .eq('id', user.id)
                               if (!error) await fetchClientUsers()
                             }}
-                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50 transition-colors"
+                            className="px-2 py-1 text-xs text-red-600 hover:text-red-800 border border-red-300 rounded hover:bg-red-50 transition-colors cursor-pointer"
                           >
                             Remove
                           </button>
@@ -778,7 +918,7 @@ export default function ProjectDetails() {
                             }
                           }}
                           disabled={!newClientUser.name || !newClientUser.email}
-                          className="px-3 py-1 text-sm text-white btn-primary disabled:bg-gray-400 rounded transition-colors"
+                          className="px-3 py-1 text-sm text-white btn-primary disabled:bg-gray-400 rounded transition-colors cursor-pointer disabled:cursor-not-allowed"
                         >
                           Add User
                         </button>
@@ -791,7 +931,7 @@ export default function ProjectDetails() {
                           setEditingField(null)
                           setNewClientUser({ name: '', email: '' })
                         }}
-                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
                       >
                         Done
                       </button>
@@ -830,9 +970,9 @@ export default function ProjectDetails() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 group"
+            className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 group"
           >
-            <h3 className="text-2xl font-bold text-gray-900 mb-8">Project Summary</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Project Summary</h3>
             {editingField === 'overall_summary' ? (
               <div className="space-y-3">
                 <textarea
@@ -867,7 +1007,11 @@ export default function ProjectDetails() {
               <div className="relative">
                 <p 
                   onClick={() => handleFieldEdit('overall_summary', project.overall_summary)}
-                  className={`text-gray-700 leading-relaxed hover:bg-gray-50 px-3 py-2 rounded cursor-pointer transition-all ${
+                  className={`text-gray-700 leading-relaxed px-3 py-2 rounded transition-all ${
+                    project.overall_status === 'completed' 
+                      ? 'cursor-default' 
+                      : 'hover:bg-gray-50 cursor-pointer'
+                  } ${
                     flashField === 'overall_summary' ? 'border-2 border-green-500 bg-green-50' : ''
                   }`}
                 >
@@ -875,15 +1019,66 @@ export default function ProjectDetails() {
                     <span className="text-gray-400 italic">Click to add project summary</span>
                   )}
                 </p>
-                <button
-                  onClick={() => handleFieldEdit('overall_summary', project.overall_summary)}
-                  className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  ✎
-                </button>
+                {project.overall_status !== 'completed' && (
+                  <button
+                    onClick={() => handleFieldEdit('overall_summary', project.overall_summary)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  >
+                    ✎
+                  </button>
+                )}
               </div>
             )}
           </motion.div>
+          
+          {/* Secondary Action Buttons */}
+          <div className="flex justify-end items-center space-x-3">
+{/* Dynamic action buttons based on project status */}
+            {project.overall_status === 'completed' ? (
+              <motion.button
+                onClick={handleReactivateProject}
+                disabled={actionLoading}
+                className="flex items-center px-4 py-2 border border-green-300 text-green-700 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: actionLoading ? 1 : 1.02 }}
+                whileTap={{ scale: actionLoading ? 1 : 0.98 }}
+              >
+                {actionLoading ? (
+                  <div className="animate-spin h-4 w-4 border-2 border-green-300 border-t-green-600 rounded-full mr-1.5"></div>
+                ) : (
+                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                )}
+                Reactivate
+              </motion.button>
+            ) : (
+              <motion.button
+                onClick={() => setShowCompleteConfirm(true)}
+                disabled={actionLoading}
+                className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:border-gray-400 hover:bg-gray-50 transition-all cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                whileHover={{ scale: actionLoading ? 1 : 1.02 }}
+                whileTap={{ scale: actionLoading ? 1 : 0.98 }}
+              >
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Complete
+              </motion.button>
+            )}
+            
+            <motion.button
+              onClick={() => setShowArchiveConfirm(true)}
+              disabled={actionLoading}
+              className="flex items-center px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:border-red-400 hover:bg-red-50 transition-all cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              whileHover={{ scale: actionLoading ? 1 : 1.02 }}
+              whileTap={{ scale: actionLoading ? 1 : 0.98 }}
+            >
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Archive
+            </motion.button>
+          </div>
         </div>
 
 
@@ -937,6 +1132,27 @@ export default function ProjectDetails() {
         dangerous={confirmDialog.dangerous}
         onConfirm={confirmDialog.onConfirm}
         onCancel={confirmDialog.onCancel}
+      />
+
+      {/* Complete Project Modal */}
+      <CompleteProjectModal
+        isOpen={showCompleteConfirm}
+        projectName={project?.name || ''}
+        clientName={project?.client_name || ''}
+        onConfirm={handleCompleteProject}
+        onCancel={() => setShowCompleteConfirm(false)}
+        loading={actionLoading}
+      />
+
+      {/* Archive Project Confirmation */}
+      <ConfirmDialog
+        isOpen={showArchiveConfirm}
+        title="Archive Project"
+        message={`⚠️ DANGER: Are you sure you want to archive "${project?.name}"? This action will permanently remove the project from all interfaces. Use this only for projects created by mistake or clients who are no longer clients. This action cannot be undone.`}
+        confirmText="Archive Project"
+        dangerous={true}
+        onConfirm={handleArchiveProject}
+        onCancel={() => setShowArchiveConfirm(false)}
       />
 
     </div>

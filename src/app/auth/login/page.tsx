@@ -10,6 +10,10 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showBetaForm, setShowBetaForm] = useState(false);
+  const [betaEmail, setBetaEmail] = useState("");
+  const [betaLoading, setBetaLoading] = useState(false);
+  const [betaMessage, setBetaMessage] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();              // ⬅️ STOP browser form post
@@ -39,6 +43,54 @@ export default function Login() {
       setError(err.message ?? "Network error.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleBetaSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    
+    // Custom validation (Tesla-style - clean and minimal)
+    if (!betaEmail.trim()) {
+      setBetaMessage('Please enter your email address.');
+      return;
+    }
+    
+    if (!betaEmail.includes('@') || !betaEmail.includes('.')) {
+      setBetaMessage('Please enter a valid email address.');
+      return;
+    }
+    
+    setBetaLoading(true);
+    setBetaMessage(null);
+
+    try {
+      console.log('Sending beta interest for:', betaEmail.trim());
+      
+      const response = await fetch('/api/beta-interest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: betaEmail.trim() })
+      });
+
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (data.success) {
+        setBetaMessage('✅ ' + data.message + ' (Email sent!)');
+        setBetaEmail('');
+        // Smooth auto-hide after success
+        setTimeout(() => {
+          // Smoothly fade out the entire form
+          setShowBetaForm(false);
+        }, 2000);
+      } else {
+        setBetaMessage(data.error || 'Something went wrong. Please try again.');
+      }
+    } catch (error) {
+      setBetaMessage('Network error. Please check your connection.');
+    } finally {
+      setBetaLoading(false);
     }
   }
 
@@ -127,14 +179,115 @@ export default function Login() {
             </motion.button>
           </form>
           
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center space-y-4">
             <motion.button
               onClick={() => router.push('/auth/forgot-password')}
               whileHover={{ scale: 1.02 }}
-              className="text-sm text-gray-600 hover:text-gray-900 font-medium cursor-pointer transition-colors"
+              className="text-sm text-gray-600 hover:text-gray-900 cursor-pointer transition-colors"
             >
               Forgot password?
             </motion.button>
+            
+            {/* Beta Interest Capture - Now visible for design improvements */}
+            <div>
+              {!showBetaForm ? (
+                <motion.button
+                  onClick={() => setShowBetaForm(true)}
+                  whileHover={{ scale: 1.01 }}
+                  className="text-xs text-gray-500 hover:text-gray-700 cursor-pointer transition-colors"
+                >
+                  Interested in early access?
+                </motion.button>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, height: 0, y: -8 }}
+                  animate={{ opacity: 1, height: 'auto', y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -8 }}
+                  transition={{ 
+                    duration: 0.6, 
+                    ease: [0.16, 1, 0.3, 1],
+                    height: { duration: 0.8 },
+                    opacity: { duration: 0.4 }
+                  }}
+                  className="text-left overflow-hidden"
+                >
+                  <form onSubmit={handleBetaSubmit} className="pt-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ 
+                        delay: 0.15, 
+                        duration: 0.5,
+                        ease: [0.16, 1, 0.3, 1]
+                      }}
+                    >
+                      <input
+                        type="email"
+                        value={betaEmail}
+                        onChange={(e) => setBetaEmail(e.target.value)}
+                        placeholder="Enter your email to learn more"
+                        autoFocus
+                        className="w-full px-0 py-2 text-sm bg-transparent border-0 border-b border-gray-200 focus:border-gray-400 focus:outline-none text-gray-900 transition-all duration-300 placeholder-gray-400 font-light"
+                      />
+                    </motion.div>
+                    
+                    <motion.div 
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ 
+                        delay: 0.3, 
+                        duration: 0.5,
+                        ease: [0.16, 1, 0.3, 1]
+                      }}
+                      className="flex justify-end items-center pt-3 space-x-4"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowBetaForm(false);
+                          setBetaEmail('');
+                          setBetaMessage(null);
+                        }}
+                        className="text-xs text-gray-400 hover:text-gray-600 cursor-pointer transition-all duration-200 font-light"
+                      >
+                        close
+                      </button>
+                      
+                      <motion.button
+                        type="submit"
+                        disabled={betaLoading}
+                        whileHover={{ scale: 1.2, x: 4 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ 
+                          type: "spring", 
+                          stiffness: 300, 
+                          damping: 15 
+                        }}
+                        className="text-xs cursor-pointer transition-all duration-200 disabled:opacity-50 font-medium px-2 py-1"
+                        style={{ color: '#1C2B45' }}
+                      >
+                        {betaLoading ? '...' : '→'}
+                      </motion.button>
+                    </motion.div>
+                  </form>
+                  
+                  {betaMessage && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ 
+                        duration: 0.5, 
+                        ease: [0.16, 1, 0.3, 1] 
+                      }}
+                      className="text-xs text-gray-500 mt-2 font-light"
+                    >
+                      {betaMessage}
+                    </motion.div>
+                  )}
+                </motion.div>
+              )}
+            </div>
           </div>
         </motion.div>
       </motion.div>

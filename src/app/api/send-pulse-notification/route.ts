@@ -6,12 +6,12 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   try {
-    const { projectId, weekNumber } = await request.json()
+    const { projectId, weekNumber, isCompletionNotification } = await request.json()
 
-    console.log('Received email notification request:', { projectId, weekNumber })
+    console.log('Received email notification request:', { projectId, weekNumber, isCompletionNotification })
 
-    if (!projectId || !weekNumber) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
+    if (!projectId || (!weekNumber && !isCompletionNotification)) {
+      return NextResponse.json({ error: 'Missing required parameters: projectId and either weekNumber or isCompletionNotification' }, { status: 400 })
     }
 
     // Get project details
@@ -121,7 +121,10 @@ export async function POST(request: NextRequest) {
                             
                             <!-- Main Message -->
                             <p style="margin: 0 0 32px 0; color: #475569; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; line-height: 1.7; font-weight: 400;">
-                              Welcome to the future of project transparency. Your project <strong style="color: #1e293b; font-weight: 600;">${project.name}</strong> has a fresh update waiting in your private portal.
+                              ${isCompletionNotification 
+                                ? `🎉 Congratulations! Your project <strong style="color: #1e293b; font-weight: 600;">${project.name}</strong> has been successfully completed. All deliverables have been met, and your project is now ready for review.`
+                                : `Welcome to the future of project transparency. Your project <strong style="color: #1e293b; font-weight: 600;">${project.name}</strong> has a fresh update waiting in your private portal.`
+                              }
                             </p>
                             
                             <!-- Value Proposition -->
@@ -141,7 +144,9 @@ export async function POST(request: NextRequest) {
                                   <table cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
                                     <tr>
                                       <td style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); background-color: #1e293b; padding: 20px 48px; text-align: center; border-radius: 12px; border: 2px solid transparent; box-shadow: 0 4px 14px 0 rgba(30, 41, 59, 0.3);">
-                                        <a href="${portalLink}" style="color: #ffffff; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 700; display: block; letter-spacing: 0.5px;">View Your Update →</a>
+                                        <a href="${portalLink}" style="color: #ffffff; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif; font-size: 18px; font-weight: 700; display: block; letter-spacing: 0.5px;">
+                                          ${isCompletionNotification ? 'View Final Results →' : 'View Your Update →'}
+                                        </a>
                                       </td>
                                     </tr>
                                   </table>
@@ -200,7 +205,9 @@ export async function POST(request: NextRequest) {
         const result = await resend.emails.send({
           from: 'Project Pulse <pulse@send.rothman.fit>',
           to: user.email,
-          subject: `Project Update: ${project.name} - Week ${weekNumber}`,
+          subject: isCompletionNotification 
+            ? `Project Complete: ${project.name} - Final Update` 
+            : `Project Update: ${project.name} - Week ${weekNumber}`,
           html: emailHtml,
         })
         

@@ -127,6 +127,7 @@ function ClientPortalContent() {
   }
 
   async function fetchSnapshots(projectId: string) {
+    console.log('🔍 fetchSnapshots called for projectId:', projectId)
     setSnapshotsLoading(true)
     try {
       const { data, error } = await supabase
@@ -135,6 +136,8 @@ function ClientPortalContent() {
         .eq('project_id', projectId)
         .order('created_at', { ascending: false })
       
+      console.log('🔍 Snapshots query result:', { data, error })
+      
       if (error) {
         console.error('Error fetching snapshots:', error)
       } else {
@@ -142,6 +145,7 @@ function ClientPortalContent() {
         const recentSnapshots = (data || [])
           .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         
+        console.log('🔍 Setting snapshots:', recentSnapshots.length, 'snapshots found')
         setSnapshots(recentSnapshots)
       }
     } catch (err) {
@@ -188,18 +192,8 @@ function ClientPortalContent() {
     }
   }
 
-  // Filter projects based on search and status
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         project.pm_assigned.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'all' || 
-                         (statusFilter === 'active' && !['completed', 'cancelled'].includes(project.overall_status)) ||
-                         (statusFilter === 'completed' && ['completed', 'cancelled'].includes(project.overall_status))
-    
-    return matchesSearch && matchesStatus
-  })
+  // For client portal, don't filter by status - show whatever project the token gives access to
+  const filteredProjects = projects
 
   // Determine if we should show the project selector
   const shouldShowProjectSelector = projects.length > 1 || 
@@ -217,7 +211,10 @@ function ClientPortalContent() {
     }
   }, [filteredProjects, selectedProject])
 
+  console.log('🔍 RENDER CHECK - loading:', loading, 'authError:', authError, 'projects.length:', projects.length, 'selectedProject:', !!selectedProject, 'snapshots.length:', snapshots.length)
+
   if (loading) {
+    console.log('🔍 Rendering loading state')
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-lg">Loading your projects...</div>
@@ -226,6 +223,7 @@ function ClientPortalContent() {
   }
 
   if (authError) {
+    console.log('🔍 Rendering auth error state:', authError)
     const isNoToken = authError.includes('Access token is required')
     
     return (
